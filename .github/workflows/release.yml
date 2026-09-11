@@ -1,0 +1,50 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build & Publish Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: maven
+
+      - name: Build package
+        run: mvn -B -V clean package -DskipTests=false
+
+      - name: Resolve artifact paths
+        id: artifact
+        shell: bash
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          JAR="target/lind-algorithm-${VERSION}.jar"
+          if [[ ! -f "$JAR" ]]; then
+            JAR="$(ls target/lind-algorithm-*.jar | grep -v '\-sources\|\-javadoc' | head -n1)"
+          fi
+          echo "jar=$JAR" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: lind-algorithm ${{ steps.artifact.outputs.version }}
+          generate_release_notes: true
+          files: |
+            ${{ steps.artifact.outputs.jar }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
