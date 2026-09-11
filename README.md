@@ -8,10 +8,23 @@
 
 | 包 | 内容 |
 |---|---|
-| `com.lind.algorithm.tree` | Trie / BinaryTreeNode / RedBlackTree / 磁盘 LsmTree / Tree |
-| `com.lind.algorithm.fsm` | 有限状态机 StateMachine（Fluent API：Guard / Action / Entry-Exit） |
-| `com.lind.algorithm.wheel` | 层级哈希时间轮 HashedWheelTimer（延时任务 / 可取消） |
-| `com.lind.algorithm.loadbalance` | 负载均衡：随机 / 轮询 / LRU / LFU / 一致性哈希 / 平滑加权轮询 |
+| `tree` | Trie / 二叉树 / 红黑树 / B+ / R 树 / AST / CST / 决策树 / 流程树 / 多叉树 / LSM / 菜单树 |
+| `fsm` | 有限状态机（Guard / Action / Entry-Exit） |
+| `wheel` | 层级哈希时间轮（延时任务） |
+| `loadbalance` | 随机 / 轮询 / LRU / LFU / 一致性哈希 / 平滑加权轮询 |
+| `ratelimit` | 令牌桶 / 漏桶 / 滑动窗口 |
+| `circuit` | 熔断器（Closed / Open / Half-Open） |
+| `retry` | 指数退避重试（可选抖动） |
+| `bloom` | Bloom 过滤器 |
+| `skiplist` | 跳表有序 KV |
+| `cache` | LRU / LFU 本地缓存 |
+| `id` | 雪花算法 ID |
+| `bitmap` | 位图与集合运算 |
+| `topk` | Top-K 计数 / Count-Min Sketch |
+| `schedule` | 简化 Cron 下次触发时间 |
+| `graph` | Dijkstra / 拓扑排序 / 环检测 |
+| `unionfind` | 并查集 |
+| `stringmatch` | KMP / AC 自动机 |
 
 ## 依赖
 
@@ -56,6 +69,18 @@ try (HashedWheelTimer timer = new HashedWheelTimer()) {
 ```java
 String node = LoadBalancers.ROUND_ROBIN.balancer()
     .select("OrderService", List.of("a:8080", "b:8080", "c:8080"));
+```
+
+### 限流 / 熔断 / 重试
+
+```java
+RateLimiter limiter = new TokenBucketRateLimiter(100, 50);
+CircuitBreaker breaker = new CircuitBreaker(5, 2, 10, TimeUnit.SECONDS);
+RetryTemplate retry = RetryTemplate.builder().maxAttempts(3).jitter(true).build();
+
+if (limiter.tryAcquire()) {
+    retry.execute(() -> breaker.execute(() -> callRemote()));
+}
 ```
 
 ## 构建与测试
