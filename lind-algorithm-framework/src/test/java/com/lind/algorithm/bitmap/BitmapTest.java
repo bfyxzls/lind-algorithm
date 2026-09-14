@@ -21,9 +21,9 @@ public class BitmapTest {
 		b.set(5);
 		assertTrue(a.get(1));
 		assertFalse(a.get(2));
-		assertEquals(1, a.and(b).cardinality());
-		assertEquals(3, a.or(b).cardinality());
-		assertEquals(2, a.xor(b).cardinality());
+		assertEquals(1, a.and(b).cardinality()); // 两个集合交集个数
+		assertEquals(3, a.or(b).cardinality()); // 两个集合并集个数
+		assertEquals(2, a.xor(b).cardinality()); // 两个集合对称差个数
 	}
 
 }

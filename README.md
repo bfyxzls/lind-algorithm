@@ -1,10 +1,23 @@
 # lind-algorithm
 
-通用算法与数据结构库，纯 JDK（17+），无 Spring 运行时依赖。
+通用算法与数据结构库（多模块）。核心算法纯 JDK（17+）；另含 SSE 流式 Web 演示子项目。
 
 原隶属 [lind-framework](https://github.com/bfyxzls/lind-framework)，现已独立维护。
 
-## 模块一览
+## 工程结构
+
+| 模块 | 说明 |
+|---|---|
+| `lind-algorithm` | 算法与数据结构核心库（无 Spring 运行时依赖） |
+| `lind-stream-web` | 流式 Web 服务：`text/event-stream`，类大模型逐段返回 |
+
+```bash
+mvn clean test
+mvn -pl lind-stream-web -am spring-boot:run
+# 打开 http://localhost:8088/
+```
+
+## 核心库模块一览（`lind-algorithm`）
 
 | 包 | 内容 |
 |---|---|
@@ -36,58 +49,16 @@
 </dependency>
 ```
 
-安装到本地：
+## 流式接口速览（`lind-stream-web`）
 
 ```bash
-mvn clean install
+curl -N http://localhost:8088/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Accept: text/event-stream" \
+  -d "{\"model\":\"lind-demo\",\"stream\":true,\"messages\":[{\"role\":\"user\",\"content\":\"你好\"}]}"
 ```
 
-## 快速示例
-
-### 状态机
-
-```java
-StateMachine<OrderState, OrderEvent, OrderContext> sm = StateMachine
-    .<OrderState, OrderEvent, OrderContext>builder()
-    .initial(OrderState.CREATED)
-    .context(ctx)
-    .from(OrderState.CREATED).on(OrderEvent.PAY).to(OrderState.PAID)
-    .build();
-sm.fire(OrderEvent.PAY);
-```
-
-### 时间轮延时任务
-
-```java
-try (HashedWheelTimer timer = new HashedWheelTimer()) {
-    timer.newTimeout(t -> cancelUnpaidOrder(orderId), 30, TimeUnit.MINUTES);
-}
-```
-
-### 负载均衡
-
-```java
-String node = LoadBalancers.ROUND_ROBIN.balancer()
-    .select("OrderService", List.of("a:8080", "b:8080", "c:8080"));
-```
-
-### 限流 / 熔断 / 重试
-
-```java
-RateLimiter limiter = new TokenBucketRateLimiter(100, 50);
-CircuitBreaker breaker = new CircuitBreaker(5, 2, 10, TimeUnit.SECONDS);
-RetryTemplate retry = RetryTemplate.builder().maxAttempts(3).jitter(true).build();
-
-if (limiter.tryAcquire()) {
-    retry.execute(() -> breaker.execute(() -> callRemote()));
-}
-```
-
-## 构建与测试
-
-```bash
-mvn clean test
-```
+详见 [lind-stream-web/README.md](lind-stream-web/README.md)。
 
 ## License
 

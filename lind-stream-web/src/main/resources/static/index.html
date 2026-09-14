@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>lind-stream-web · SSE 流式对话</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg0: #0f1419;
+      --bg1: #1a222d;
+      --line: #2c3848;
+      --text: #e8eef6;
+      --muted: #8b9bb0;
+      --accent: #3d9cf0;
+      --accent-dim: #1e4f7a;
+      --ok: #3ecf8e;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "IBM Plex Sans", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(1200px 600px at 10% -10%, #1d3a57 0%, transparent 55%),
+        radial-gradient(900px 500px at 100% 0%, #163528 0%, transparent 50%),
+        var(--bg0);
+    }
+    .wrap {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 48px 20px 64px;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: clamp(1.6rem, 3vw, 2.2rem);
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+    .sub {
+      margin: 0 0 28px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+    .panel {
+      background: color-mix(in srgb, var(--bg1) 88%, transparent);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 18px;
+      backdrop-filter: blur(8px);
+    }
+    label {
+      display: block;
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+    textarea {
+      width: 100%;
+      min-height: 96px;
+      resize: vertical;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #121821;
+      color: var(--text);
+      padding: 12px 14px;
+      font: 500 0.95rem/1.5 "IBM Plex Sans", sans-serif;
+      outline: none;
+    }
+    textarea:focus { border-color: var(--accent); }
+    .row {
+      display: flex;
+      gap: 10px;
+      margin-top: 12px;
+      flex-wrap: wrap;
+    }
+    button {
+      border: 0;
+      border-radius: 999px;
+      padding: 10px 18px;
+      font: 600 0.9rem/1 "IBM Plex Sans", sans-serif;
+      cursor: pointer;
+      transition: transform .15s ease, background .15s ease, opacity .15s ease;
+    }
+    button:active { transform: scale(0.98); }
+    button.primary {
+      background: linear-gradient(180deg, #4aa7f5, var(--accent));
+      color: #041018;
+    }
+    button.ghost {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--line);
+    }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .meta {
+      margin-top: 14px;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+    .meta .live { color: var(--ok); }
+    .out {
+      margin-top: 18px;
+      min-height: 220px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.92rem;
+      line-height: 1.65;
+      color: #d7e4f5;
+    }
+    .cursor::after {
+      content: "▍";
+      margin-left: 1px;
+      animation: blink 1s steps(1) infinite;
+      color: var(--accent);
+    }
+    @keyframes blink { 50% { opacity: 0; } }
+    code {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.85em;
+      background: #121821;
+      padding: 1px 6px;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>lind-stream-web</h1>
+    <p class="sub">
+      后端以 <code>text/event-stream</code> 协议逐步推送内容，前端边收边渲染，
+      体验类似大模型 Chat Completions 的流式输出。
+    </p>
+
+    <div class="panel">
+      <label for="q">输入问题</label>
+      <textarea id="q" placeholder="例如：请介绍一下时间轮算法">请用流式方式介绍一下 Server-Sent Events</textarea>
+      <div class="row">
+        <button class="primary" id="btnOpenAi" type="button">OpenAI 风格流式</button>
+        <button class="ghost" id="btnSimple" type="button">简易 SSE 流式</button>
+        <button class="ghost" id="btnStop" type="button" disabled>停止</button>
+        <button class="ghost" id="btnClear" type="button">清空</button>
+      </div>
+      <div class="meta" id="meta">待命</div>
+      <div class="out" id="out"></div>
+    </div>
+  </div>
+
+  <script>
+    const out = document.getElementById("out");
+    const meta = document.getElementById("meta");
+    const q = document.getElementById("q");
+    const btnOpenAi = document.getElementById("btnOpenAi");
+    const btnSimple = document.getElementById("btnSimple");
+    const btnStop = document.getElementById("btnStop");
+    const btnClear = document.getElementById("btnClear");
+
+    let controller = null;
+
+    function setBusy(busy) {
+      btnOpenAi.disabled = busy;
+      btnSimple.disabled = busy;
+      btnStop.disabled = !busy;
+      out.classList.toggle("cursor", busy);
+    }
+
+    function append(text) {
+      out.textContent += text;
+      out.scrollTop = out.scrollHeight;
+    }
+
+    btnClear.onclick = () => {
+      out.textContent = "";
+      meta.textContent = "已清空";
+    };
+
+    btnStop.onclick = () => {
+      if (controller) controller.abort();
+    };
+
+    async function streamOpenAi() {
+      controller = new AbortController();
+      setBusy(true);
+      out.textContent = "";
+      meta.innerHTML = '<span class="live">●</span> 连接 /v1/chat/completions …';
+
+      const res = await fetch("/v1/chat/completions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Accept": "text/event-stream" },
+        signal: controller.signal,
+        body: JSON.stringify({
+          model: "lind-demo",
+          stream: true,
+          messages: [{ role: "user", content: q.value }]
+        })
+      });
+
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      meta.innerHTML = '<span class="live">●</span> 流式接收中（OpenAI chunk）';
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder("utf-8");
+      let buffer = "";
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const parts = buffer.split("\n\n");
+        buffer = parts.pop();
+        for (const part of parts) {
+          const line = part.split("\n").find(l => l.startsWith("data:"));
+          if (!line) continue;
+          const data = line.slice(5).trim();
+          if (data === "[DONE]") {
+            meta.textContent = "完成";
+            continue;
+          }
+          try {
+            const json = JSON.parse(data);
+            const delta = json.choices?.[0]?.delta?.content;
+            if (delta) append(delta);
+          } catch (_) { /* ignore */ }
+        }
+      }
+    }
+
+    async function streamSimple() {
+      controller = new AbortController();
+      setBusy(true);
+      out.textContent = "";
+      meta.innerHTML = '<span class="live">●</span> 连接 /api/chat/stream …';
+
+      const res = await fetch("/api/chat/stream?q=" + encodeURIComponent(q.value), {
+        headers: { "Accept": "text/event-stream" },
+        signal: controller.signal
+      });
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      meta.innerHTML = '<span class="live">●</span> 流式接收中（token 事件）';
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder("utf-8");
+      let buffer = "";
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const parts = buffer.split("\n\n");
+        buffer = parts.pop();
+        for (const part of parts) {
+          const lines = part.split("\n");
+          const event = (lines.find(l => l.startsWith("event:")) || "").slice(6).trim();
+          const data = (lines.find(l => l.startsWith("data:")) || "").slice(5).trim();
+          if (event === "done" || data === "[DONE]") {
+            meta.textContent = "完成";
+          } else if (data) {
+            append(data);
+          }
+        }
+      }
+    }
+
+    async function run(fn) {
+      try {
+        await fn();
+        if (meta.textContent !== "完成") meta.textContent = "完成";
+      } catch (e) {
+        if (e.name === "AbortError") meta.textContent = "已停止";
+        else meta.textContent = "错误: " + e.message;
+      } finally {
+        setBusy(false);
+        controller = null;
+      }
+    }
+
+    btnOpenAi.onclick = () => run(streamOpenAi);
+    btnSimple.onclick = () => run(streamSimple);
+  </script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+server:
+  port: 8088
+
+spring:
+  application:
+    name: lind-stream-web
+  codec:
+    max-in-memory-size: 2MB
+
+logging:
+  level:
+    com.lind.stream: INFO
