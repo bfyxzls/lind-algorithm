@@ -24,8 +24,8 @@ public class WebConfig implements WebFluxConfigurer {
 			String path = exchange.getRequest().getPath().value();
 			if (path.contains("/stream") || path.contains("/chat/completions")) {
 				HttpHeaders headers = exchange.getResponse().getHeaders();
-				headers.add("Cache-Control", "no-cache");
-				headers.add("X-Accel-Buffering", "no");
+				headers.add("Cache-Control", "no-cache");// 可以缓存，但每次使用前必须回源验证；验证通过可用 304 复用，不通过则取新内容
+				headers.add("X-Accel-Buffering", "no");// 禁用对该响应的代理缓冲（proxy_buffering）
 			}
 			return chain.filter(exchange);
 		};

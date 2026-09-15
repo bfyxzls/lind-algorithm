@@ -38,6 +38,7 @@ mvn -pl lind-stream-web -am spring-boot:run
 | `graph` | Dijkstra / 拓扑排序 / 环检测 |
 | `unionfind` | 并查集 |
 | `stringmatch` | KMP / AC 自动机 |
+| `otp` | HOTP / TOTP（滑动窗口校验，默认 6 位） |
 
 ## 依赖
 

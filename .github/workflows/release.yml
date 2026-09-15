@@ -32,11 +32,16 @@ jobs:
         shell: bash
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
-          JAR="target/lind-algorithm-${VERSION}.jar"
-          if [[ ! -f "$JAR" ]]; then
-            JAR="$(ls target/lind-algorithm-*.jar | grep -v '\-sources\|\-javadoc' | head -n1)"
+          CORE="lind-algorithm/target/lind-algorithm-${VERSION}.jar"
+          STREAM="lind-stream-web/target/lind-stream-web-${VERSION}.jar"
+          if [[ ! -f "$CORE" ]]; then
+            CORE="$(ls lind-algorithm/target/lind-algorithm-*.jar | grep -vE 'sources|javadoc|original' | head -n1)"
           fi
-          echo "jar=$JAR" >> "$GITHUB_OUTPUT"
+          if [[ ! -f "$STREAM" ]]; then
+            STREAM="$(ls lind-stream-web/target/lind-stream-web-*.jar | grep -vE 'sources|javadoc|original' | head -n1)"
+          fi
+          echo "core=$CORE" >> "$GITHUB_OUTPUT"
+          echo "stream=$STREAM" >> "$GITHUB_OUTPUT"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Create GitHub Release
@@ -45,6 +50,7 @@ jobs:
           name: lind-algorithm ${{ steps.artifact.outputs.version }}
           generate_release_notes: true
           files: |
-            ${{ steps.artifact.outputs.jar }}
+            ${{ steps.artifact.outputs.core }}
+            ${{ steps.artifact.outputs.stream }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

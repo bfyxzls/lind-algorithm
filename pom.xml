@@ -5,11 +5,11 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.lind</groupId>
-    <artifactId>lind-algorithm-parent</artifactId>
+    <artifactId>lind-algorithm</artifactId>
     <version>1.0.0</version>
     <packaging>pom</packaging>
 
-    <name>lind-algorithm-parent</name>
+    <name>lind-algorithm</name>
     <description>lind-algorithm 多模块父工程：算法库 + 流式 Web 演示</description>
     <url>https://github.com/bfyxzls/lind-algorithm</url>
 
@@ -26,6 +26,8 @@
         <spring-boot.version>3.3.5</spring-boot.version>
         <maven-compiler-plugin.version>3.13.0</maven-compiler-plugin.version>
         <maven-surefire-plugin.version>3.5.2</maven-surefire-plugin.version>
+        <lombok.version>1.18.36</lombok.version>
+        <logback.version>1.5.32</logback.version>
     </properties>
 
     <dependencyManagement>
@@ -47,6 +49,17 @@
                 <artifactId>junit-jupiter</artifactId>
                 <version>${junit.version}</version>
                 <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok</artifactId>
+                <version>${lombok.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>ch.qos.logback</groupId>
+                <artifactId>logback-classic</artifactId>
+                <version>${logback.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
