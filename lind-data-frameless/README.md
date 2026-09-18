@@ -1,6 +1,6 @@
-# lind-data-framework
+# lind-data-frameless
 
-数据中间件场景封装库（无 Spring 运行时依赖），从算法模块拆出，职责更清晰。
+无 Spring 的数据中间件场景封装（frameless = 不依赖 Spring 框架）。
 
 | 包 | 客户端 | 场景 |
 |---|---|---|
@@ -8,12 +8,23 @@
 | `com.lind.data.mongodb` | mongodb-driver-sync | CRUD / 查询 / 聚合 / GEO / TTL / 全文 / 序列 |
 | `com.lind.data.elasticsearch` | elasticsearch-java | 文档 / 全文检索 / 聚合 / 地理距离 |
 
+## 与 Spring Boot / lind-data-starter 怎么选
+
+| 场景 | 选择 |
+|---|---|
+| Spring Boot 业务项目 | **[`lind-data-starter`](../lind-data-starter/README.md)**（基于 Spring Data Redis / MongoDB / Elasticsearch + HBase 自动配置） |
+| 无 Spring / CLI / 教学演示原生命令拼装 | **本模块 `lind-data-frameless`** |
+
+**一句话**：生产 Spring Boot → `lind-data-starter`；无框架或要看清 Jedis/Driver 命令 → `lind-data-frameless`。
+
+同一应用对同一中间件不要同时混用两套客户端。
+
 ## 依赖
 
 ```xml
 <dependency>
     <groupId>com.lind</groupId>
-    <artifactId>lind-data-framework</artifactId>
+    <artifactId>lind-data-frameless</artifactId>
     <version>1.0.0</version>
 </dependency>
 ```

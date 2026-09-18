@@ -9,7 +9,8 @@
 | 模块 | 说明 |
 |---|---|
 | `lind-algorithm-framework` | 算法与数据结构（树 / FSM / 时间轮 / 限流 / OTP 等，无中间件客户端） |
-| `lind-data-framework` | Redis / MongoDB / Elasticsearch 场景封装 |
+| `lind-data-frameless` | 无 Spring：Jedis / Mongo Sync / ES Java API 场景封装 |
+| `lind-data-starter` | Spring Boot Starter：Spring Data Redis/Mongo/ES + HBase 自动配置 |
 | `lind-stream-web` | 流式 Web：`text/event-stream`，类大模型逐段返回 |
 
 ```bash
@@ -41,30 +42,35 @@ mvn -pl lind-stream-web -am spring-boot:run
 | `stringmatch` | KMP / AC 自动机 |
 | `otp` | HOTP / TOTP（滑动窗口校验，默认 6 位） |
 
-## 数据中间件（`lind-data-framework`）
+## 数据中间件
 
-详见 [lind-data-framework/README.md](lind-data-framework/README.md)。
-
-| 包 | 内容 |
+| 模块 | 说明 |
 |---|---|
-| `redis` | Jedis：缓存/锁/限流/Bloom/GEO/排行/队列/延迟队列/PubSub/位图/HLL/社交/ID |
-| `mongodb` | Sync Driver：CRUD/查询/聚合/GEO/TTL/全文/序列 |
-| `elasticsearch` | Java API：文档/全文检索/聚合/地理距离 |
-
-## 依赖
+| [`lind-data-starter`](lind-data-starter/README.md) | **Spring Boot 优先**：基于 Spring Data Redis / MongoDB / Elasticsearch + HBase Client |
+| [`lind-data-frameless`](lind-data-frameless/README.md) | 无 Spring：Jedis / Mongo Sync Driver / ES Java API |
 
 ```xml
-<!-- 算法 -->
+<!-- Spring Boot 业务 -->
 <dependency>
     <groupId>com.lind</groupId>
-    <artifactId>lind-algorithm-framework</artifactId>
+    <artifactId>lind-data-starter</artifactId>
     <version>1.0.0</version>
 </dependency>
 
-<!-- Redis / MongoDB / Elasticsearch 场景封装 -->
+<!-- 无 Spring / 教学演示 -->
 <dependency>
     <groupId>com.lind</groupId>
-    <artifactId>lind-data-framework</artifactId>
+    <artifactId>lind-data-frameless</artifactId>
+    <version>1.0.0</version>
+</dependency>
+```
+
+## 依赖（算法）
+
+```xml
+<dependency>
+    <groupId>com.lind</groupId>
+    <artifactId>lind-algorithm-framework</artifactId>
     <version>1.0.0</version>
 </dependency>
 ```

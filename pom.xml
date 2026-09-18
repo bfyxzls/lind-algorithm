@@ -15,7 +15,8 @@
 
     <modules>
         <module>lind-algorithm-framework</module>
-        <module>lind-data-framework</module>
+        <module>lind-data-frameless</module>
+        <module>lind-data-starter</module>
         <module>lind-stream-web</module>
     </modules>
 
@@ -32,6 +33,7 @@
         <jedis.version>5.2.0</jedis.version>
         <mongodb.version>5.2.1</mongodb.version>
         <elasticsearch-java.version>8.15.3</elasticsearch-java.version>
+        <hbase.version>2.5.10</hbase.version>
         <mockito.version>5.14.2</mockito.version>
     </properties>
 
@@ -51,7 +53,12 @@
             </dependency>
             <dependency>
                 <groupId>com.lind</groupId>
-                <artifactId>lind-data-framework</artifactId>
+                <artifactId>lind-data-frameless</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.lind</groupId>
+                <artifactId>lind-data-starter</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -95,6 +102,11 @@
                 <groupId>com.fasterxml.jackson.core</groupId>
                 <artifactId>jackson-databind</artifactId>
                 <version>2.17.2</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.hbase</groupId>
+                <artifactId>hbase-client</artifactId>
+                <version>${hbase.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.mockito</groupId>

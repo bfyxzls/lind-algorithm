@@ -10,12 +10,12 @@
         <version>1.0.0</version>
     </parent>
 
-    <artifactId>lind-data-framework</artifactId>
+    <artifactId>lind-data-frameless</artifactId>
     <packaging>jar</packaging>
 
-    <name>lind-data-framework</name>
+    <name>lind-data-frameless</name>
     <description>
-        数据中间件场景封装：Redis / MongoDB / Elasticsearch（无 Spring 运行时依赖）。
+        无 Spring 的数据中间件场景封装：Redis / MongoDB / Elasticsearch（frameless = 不依赖 Spring 框架）。
     </description>
 
     <dependencies>
