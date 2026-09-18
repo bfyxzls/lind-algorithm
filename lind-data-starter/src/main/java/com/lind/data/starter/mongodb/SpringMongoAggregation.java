@@ -25,8 +25,7 @@ public class SpringMongoAggregation {
 	public List<Document> groupCount(String collection, String groupField) {
 		Objects.requireNonNull(collection, "collection");
 		Objects.requireNonNull(groupField, "groupField");
-		Aggregation aggregation = Aggregation.newAggregation(
-				Aggregation.group(groupField).count().as("count"),
+		Aggregation aggregation = Aggregation.newAggregation(Aggregation.group(groupField).count().as("count"),
 				Aggregation.sort(Sort.Direction.DESC, "count"));
 		return aggregate(aggregation, collection, Document.class);
 	}
@@ -37,8 +36,7 @@ public class SpringMongoAggregation {
 	public <T> List<Document> groupCount(Class<T> entityClass, String groupField) {
 		Objects.requireNonNull(entityClass, "entityClass");
 		Objects.requireNonNull(groupField, "groupField");
-		Aggregation aggregation = Aggregation.newAggregation(
-				Aggregation.group(groupField).count().as("count"),
+		Aggregation aggregation = Aggregation.newAggregation(Aggregation.group(groupField).count().as("count"),
 				Aggregation.sort(Sort.Direction.DESC, "count"));
 		return aggregate(aggregation, entityClass, Document.class);
 	}

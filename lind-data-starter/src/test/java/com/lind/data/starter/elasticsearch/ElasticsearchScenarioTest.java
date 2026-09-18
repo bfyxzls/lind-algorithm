@@ -1,17 +1,21 @@
 package com.lind.data.starter.elasticsearch;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.elasticsearch.client.elc.NativeQuery;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.core.SearchHits;
@@ -30,10 +34,12 @@ class ElasticsearchScenarioTest {
 	private ElasticsearchOperations operations;
 
 	@Test
-	void facadeExposesDocuments() {
+	void facadeExposesDocumentsSearchAggregation() {
 		LindSpringElasticsearch es = new LindSpringElasticsearch(operations);
 		assertThat(es.operations()).isSameAs(operations);
 		assertThat(es.documents()).isNotNull();
+		assertThat(es.search()).isNotNull();
+		assertThat(es.aggregation()).isNotNull();
 	}
 
 	@Test
@@ -56,20 +62,62 @@ class ElasticsearchScenarioTest {
 	}
 
 	@Test
-	void matchAndSearch() {
+	void documentsCriteriaMatch() {
 		@SuppressWarnings("unchecked")
 		SearchHits<Product> hits = mock(SearchHits.class);
 		when(operations.search(any(Query.class), eq(Product.class))).thenReturn(hits);
 
 		SpringEsDocuments docs = new SpringEsDocuments(operations);
 		assertThat(docs.match("title", "耳机", Product.class)).isSameAs(hits);
-
-		ArgumentCaptor<Query> queryCaptor = ArgumentCaptor.forClass(Query.class);
-		verify(operations).search(queryCaptor.capture(), eq(Product.class));
-		assertThat(queryCaptor.getValue()).isInstanceOf(CriteriaQuery.class);
-
 		assertThat(docs.search(new CriteriaQuery(Criteria.where("title").contains("无线")), Product.class))
 				.isSameAs(hits);
+	}
+
+	@Test
+	void tokenizedMatchAndMultiMatch() {
+		@SuppressWarnings("unchecked")
+		SearchHits<Product> hits = mock(SearchHits.class);
+		when(operations.search(any(Query.class), eq(Product.class))).thenReturn(hits);
+
+		SpringEsSearch search = new SpringEsSearch(operations);
+		assertThat(search.match("title", "无线耳机", 1, 20, Product.class)).isSameAs(hits);
+		assertThat(search.multiMatch("蓝牙降噪", List.of("title", "description"), 1, 20, Product.class)).isSameAs(hits);
+		assertThat(search.matchPhrase("title", "无线耳机", 1, 10, Product.class)).isSameAs(hits);
+
+		ArgumentCaptor<Query> queryCaptor = ArgumentCaptor.forClass(Query.class);
+		verify(operations, org.mockito.Mockito.atLeast(3)).search(queryCaptor.capture(), eq(Product.class));
+		assertThat(queryCaptor.getAllValues()).allMatch(NativeQuery.class::isInstance);
+	}
+
+	@Test
+	void searchRejectsInvalidPage() {
+		SpringEsSearch search = new SpringEsSearch(operations);
+		assertThatThrownBy(() -> search.match("title", "x", 0, 10, Product.class))
+				.isInstanceOf(IllegalArgumentException.class);
+		assertThatThrownBy(() -> search.multiMatch("x", List.of(), 1, 10, Product.class))
+				.isInstanceOf(IllegalArgumentException.class);
+	}
+
+	@Test
+	void aggregationTermsSumAvgWhenNoAggsReturnDefaults() {
+		@SuppressWarnings("unchecked")
+		SearchHits<Product> hits = mock(SearchHits.class);
+		when(hits.getAggregations()).thenReturn(null);
+		when(operations.search(any(Query.class), eq(Product.class))).thenReturn(hits);
+
+		SpringEsAggregation aggregation = new SpringEsAggregation(operations);
+		assertThat(aggregation.terms("brand.keyword", 10, Product.class)).isEmpty();
+		assertThat(aggregation.sum("price", Product.class)).isZero();
+		assertThat(aggregation.avg("price", Product.class)).isZero();
+
+		ArgumentCaptor<Query> queryCaptor = ArgumentCaptor.forClass(Query.class);
+		verify(operations, org.mockito.Mockito.atLeast(3)).search(queryCaptor.capture(), eq(Product.class));
+		assertThat(queryCaptor.getAllValues()).allMatch(q -> q instanceof NativeQuery);
+	}
+
+	@Test
+	void parseTermsReturnsEmptyWhenContainerNull() {
+		assertThat(SpringEsAggregation.parseTerms(null, "terms_agg")).isEqualTo(Map.of());
 	}
 
 	@Test

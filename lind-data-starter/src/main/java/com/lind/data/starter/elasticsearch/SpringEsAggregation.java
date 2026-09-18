@@ -39,11 +39,8 @@ public class SpringEsAggregation {
 			throw new IllegalArgumentException("size must be >= 1");
 		}
 		String aggName = "terms_agg";
-		Query query = NativeQuery.builder()
-				.withMaxResults(0)
-				.withQuery(q -> q.matchAll(m -> m))
-				.withAggregation(aggName, Aggregation.of(a -> a.terms(t -> t.field(field).size(size))))
-				.build();
+		Query query = NativeQuery.builder().withMaxResults(0).withQuery(q -> q.matchAll(m -> m))
+				.withAggregation(aggName, Aggregation.of(a -> a.terms(t -> t.field(field).size(size)))).build();
 		SearchHits<T> hits = operations.search(query, entityClass);
 		return parseTerms(hits.getAggregations(), aggName);
 	}
@@ -73,11 +70,8 @@ public class SpringEsAggregation {
 		Objects.requireNonNull(aggName, "aggName");
 		Objects.requireNonNull(aggregation, "aggregation");
 		Objects.requireNonNull(entityClass, "entityClass");
-		Query query = NativeQuery.builder()
-				.withMaxResults(0)
-				.withQuery(q -> q.matchAll(m -> m))
-				.withAggregation(aggName, aggregation)
-				.build();
+		Query query = NativeQuery.builder().withMaxResults(0).withQuery(q -> q.matchAll(m -> m))
+				.withAggregation(aggName, aggregation).build();
 		return operations.search(query, entityClass);
 	}
 

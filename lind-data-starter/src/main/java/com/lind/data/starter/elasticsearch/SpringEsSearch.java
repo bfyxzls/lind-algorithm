@@ -29,10 +29,8 @@ public class SpringEsSearch {
 		Objects.requireNonNull(text, "text");
 		Objects.requireNonNull(entityClass, "entityClass");
 		requirePage(page, size);
-		Query query = NativeQuery.builder()
-				.withQuery(q -> q.match(m -> m.field(field).query(text)))
-				.withPageable(PageRequest.of(page - 1, size))
-				.build();
+		Query query = NativeQuery.builder().withQuery(q -> q.match(m -> m.field(field).query(text)))
+				.withPageable(PageRequest.of(page - 1, size)).build();
 		return operations.search(query, entityClass);
 	}
 
@@ -47,10 +45,8 @@ public class SpringEsSearch {
 			throw new IllegalArgumentException("fields must not be empty");
 		}
 		requirePage(page, size);
-		Query query = NativeQuery.builder()
-				.withQuery(q -> q.multiMatch(m -> m.query(text).fields(fields)))
-				.withPageable(PageRequest.of(page - 1, size))
-				.build();
+		Query query = NativeQuery.builder().withQuery(q -> q.multiMatch(m -> m.query(text).fields(fields)))
+				.withPageable(PageRequest.of(page - 1, size)).build();
 		return operations.search(query, entityClass);
 	}
 
@@ -62,10 +58,8 @@ public class SpringEsSearch {
 		Objects.requireNonNull(text, "text");
 		Objects.requireNonNull(entityClass, "entityClass");
 		requirePage(page, size);
-		Query query = NativeQuery.builder()
-				.withQuery(q -> q.matchPhrase(m -> m.field(field).query(text)))
-				.withPageable(PageRequest.of(page - 1, size))
-				.build();
+		Query query = NativeQuery.builder().withQuery(q -> q.matchPhrase(m -> m.field(field).query(text)))
+				.withPageable(PageRequest.of(page - 1, size)).build();
 		return operations.search(query, entityClass);
 	}
 

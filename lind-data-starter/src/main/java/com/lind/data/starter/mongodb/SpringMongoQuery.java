@@ -49,8 +49,7 @@ public class SpringMongoQuery {
 		if (equals.isEmpty()) {
 			throw new IllegalArgumentException("equals must not be empty");
 		}
-		Criteria[] conditions = equals.entrySet().stream()
-				.map(e -> Criteria.where(e.getKey()).is(e.getValue()))
+		Criteria[] conditions = equals.entrySet().stream().map(e -> Criteria.where(e.getKey()).is(e.getValue()))
 				.toArray(Criteria[]::new);
 		return findAnd(entityClass, page, size, conditions);
 	}
