@@ -1,6 +1,6 @@
 # lind-algorithm
 
-通用算法与数据结构库（多模块）。核心算法纯 JDK（17+）；另含 SSE 流式 Web 演示子项目。
+通用算法与数据结构库（多模块）。算法核心纯 JDK（17+）；数据中间件场景另拆独立模块；另含 SSE 流式 Web 演示。
 
 原隶属 [lind-framework](https://github.com/bfyxzls/lind-framework)，现已独立维护。
 
@@ -8,8 +8,9 @@
 
 | 模块 | 说明 |
 |---|---|
-| `lind-algorithm` | 算法与数据结构核心库（无 Spring 运行时依赖） |
-| `lind-stream-web` | 流式 Web 服务：`text/event-stream`，类大模型逐段返回 |
+| `lind-algorithm-framework` | 算法与数据结构（树 / FSM / 时间轮 / 限流 / OTP 等，无中间件客户端） |
+| `lind-data-framework` | Redis / MongoDB / Elasticsearch 场景封装 |
+| `lind-stream-web` | 流式 Web：`text/event-stream`，类大模型逐段返回 |
 
 ```bash
 mvn clean test
@@ -17,7 +18,7 @@ mvn -pl lind-stream-web -am spring-boot:run
 # 打开 http://localhost:8088/
 ```
 
-## 核心库模块一览（`lind-algorithm`）
+## 算法库一览（`lind-algorithm-framework`）
 
 | 包 | 内容 |
 |---|---|
@@ -40,12 +41,30 @@ mvn -pl lind-stream-web -am spring-boot:run
 | `stringmatch` | KMP / AC 自动机 |
 | `otp` | HOTP / TOTP（滑动窗口校验，默认 6 位） |
 
+## 数据中间件（`lind-data-framework`）
+
+详见 [lind-data-framework/README.md](lind-data-framework/README.md)。
+
+| 包 | 内容 |
+|---|---|
+| `redis` | Jedis：缓存/锁/限流/Bloom/GEO/排行/队列/延迟队列/PubSub/位图/HLL/社交/ID |
+| `mongodb` | Sync Driver：CRUD/查询/聚合/GEO/TTL/全文/序列 |
+| `elasticsearch` | Java API：文档/全文检索/聚合/地理距离 |
+
 ## 依赖
 
 ```xml
+<!-- 算法 -->
 <dependency>
     <groupId>com.lind</groupId>
-    <artifactId>lind-algorithm</artifactId>
+    <artifactId>lind-algorithm-framework</artifactId>
+    <version>1.0.0</version>
+</dependency>
+
+<!-- Redis / MongoDB / Elasticsearch 场景封装 -->
+<dependency>
+    <groupId>com.lind</groupId>
+    <artifactId>lind-data-framework</artifactId>
     <version>1.0.0</version>
 </dependency>
 ```

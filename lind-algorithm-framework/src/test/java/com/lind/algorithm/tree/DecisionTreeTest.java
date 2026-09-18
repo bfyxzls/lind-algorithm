@@ -13,16 +13,13 @@ public class DecisionTreeTest {
 
 	@Test
 	void predictLoanRisk() {
-		DecisionTree tree = new DecisionTree(DecisionTree.Node.branch("income")
-				.when("high", DecisionTree.Node.leaf("approve"))
-				.when("medium",
-						DecisionTree.Node.branch("credit")
-								.when("good", DecisionTree.Node.leaf("approve"))
-								.when("bad", DecisionTree.Node.leaf("reject"))
-								.build())
-				.when("low", DecisionTree.Node.leaf("reject"))
-				.otherwise(DecisionTree.Node.leaf("manual_review"))
-				.build());
+		DecisionTree tree = new DecisionTree(
+				DecisionTree.Node.branch("income").when("high", DecisionTree.Node.leaf("approve"))
+						.when("medium",
+								DecisionTree.Node.branch("credit").when("good", DecisionTree.Node.leaf("approve"))
+										.when("bad", DecisionTree.Node.leaf("reject")).build())
+						.when("low", DecisionTree.Node.leaf("reject"))
+						.otherwise(DecisionTree.Node.leaf("manual_review")).build());
 
 		assertEquals("approve", tree.predict(Map.of("income", "high")));
 		assertEquals("approve", tree.predict(Map.of("income", "medium", "credit", "good")));

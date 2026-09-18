@@ -111,7 +111,7 @@ public class BPlusTree<K extends Comparable<K>, V> {
 		return Collections.unmodifiableList(keys);
 	}
 
-	public record Entry<K, V>(K key, V value) {
+	public record Entry<K, V> (K key, V value) {
 	}
 
 	private static final class SplitResult<K extends Comparable<K>, V> {

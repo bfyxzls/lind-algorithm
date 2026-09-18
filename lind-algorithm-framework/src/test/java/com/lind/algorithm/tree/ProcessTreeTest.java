@@ -49,8 +49,7 @@ public class ProcessTreeTest {
 
 	@Test
 	void rootMustBeStart() {
-		assertThrows(IllegalArgumentException.class,
-				() -> new ProcessTree(ProcessTree.ProcessNode.task("t").build()));
+		assertThrows(IllegalArgumentException.class, () -> new ProcessTree(ProcessTree.ProcessNode.task("t").build()));
 		assertTrue(ProcessTree.ProcessNode.end("e").build().children().isEmpty());
 	}
 

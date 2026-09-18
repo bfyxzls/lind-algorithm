@@ -169,7 +169,7 @@ public class MultiWayTree<T> {
 	/**
 	 * 扁平输入节点。
 	 */
-	public record FlatNode<T>(String id, String parentId, T payload) {
+	public record FlatNode<T> (String id, String parentId, T payload) {
 
 		public FlatNode {
 			Objects.requireNonNull(id, "id");

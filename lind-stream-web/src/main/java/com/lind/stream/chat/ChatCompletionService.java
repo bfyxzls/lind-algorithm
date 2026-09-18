@@ -46,9 +46,9 @@ public class ChatCompletionService {
 				List.of(new ChatCompletionChunk.Choice(0, ChatCompletionChunk.Delta.roleAssistant(), null)));
 
 		AtomicInteger index = new AtomicInteger();
-		Flux<ChatCompletionChunk> content = streamTokens(request.lastUserContent()).map(token -> new ChatCompletionChunk(
-				id, "chat.completion.chunk", created, model,
-				List.of(new ChatCompletionChunk.Choice(0, ChatCompletionChunk.Delta.content(token), null))));
+		Flux<ChatCompletionChunk> content = streamTokens(request.lastUserContent())
+				.map(token -> new ChatCompletionChunk(id, "chat.completion.chunk", created, model,
+						List.of(new ChatCompletionChunk.Choice(0, ChatCompletionChunk.Delta.content(token), null))));
 
 		ChatCompletionChunk last = new ChatCompletionChunk(id, "chat.completion.chunk", created, model,
 				List.of(new ChatCompletionChunk.Choice(0, new ChatCompletionChunk.Delta(null, null), "stop")));
@@ -68,7 +68,7 @@ public class ChatCompletionService {
 	static List<String> tokenize(String text) {
 		List<String> tokens = new ArrayList<>();
 		StringBuilder buf = new StringBuilder();
-		for (int i = 0; i < text.length(); ) {
+		for (int i = 0; i < text.length();) {
 			int cp = text.codePointAt(i);
 			buf.appendCodePoint(cp);
 			i += Character.charCount(cp);

@@ -8,8 +8,7 @@ import java.util.Objects;
 /**
  * 具体语法树（CST / Parse Tree）：保留括号、运算符等词法单元，贴近文法推导过程。
  * <p>
- * 与 {@link Ast} 对比：CST 强调「源码长什么样」，AST 强调「语义是什么」。本实现用极简表达式文法生成 CST，
- * 并可投影为 AST。
+ * 与 {@link Ast} 对比：CST 强调「源码长什么样」，AST 强调「语义是什么」。本实现用极简表达式文法生成 CST， 并可投影为 AST。
  * </p>
  */
 public final class Cst {

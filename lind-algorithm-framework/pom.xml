@@ -15,7 +15,7 @@
 
     <name>lind-algorithm-framework</name>
     <description>
-        通用算法与数据结构组件：树结构、时间轮、状态机、负载均衡、限流熔断等（纯 JDK，无 Spring 运行时依赖）。
+        通用算法与数据结构组件：树结构、时间轮、状态机、负载均衡、限流熔断、OTP 等（纯 JDK，无 Spring / 中间件客户端依赖）。
     </description>
 
     <dependencies>

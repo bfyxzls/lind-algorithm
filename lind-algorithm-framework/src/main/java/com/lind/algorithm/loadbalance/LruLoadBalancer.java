@@ -15,7 +15,8 @@ import java.util.concurrent.atomic.AtomicLong;
 /**
  * LRU 负载均衡：优先选择最近最少被选中的节点（access-order LinkedHashMap 队头）。
  * <p>
- * 修复点：`putIfAbsent` 失败后仍写本地 map；`LinkedHashMap`/`HashMap` 未同步 → `computeIfAbsent` + 按 map 加锁；access-order 下禁止用 `putIfAbsent` 同步节点（会触发 afterNodeAccess 打乱 LRU）
+ * 修复点：`putIfAbsent` 失败后仍写本地 map；`LinkedHashMap`/`HashMap` 未同步 → `computeIfAbsent` + 按 map
+ * 加锁；access-order 下禁止用 `putIfAbsent` 同步节点（会触发 afterNodeAccess 打乱 LRU）
  * </p>
  */
 public final class LruLoadBalancer implements LoadBalancer {

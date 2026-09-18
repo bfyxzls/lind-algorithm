@@ -61,7 +61,8 @@ public final class TopKCounter<T> {
 		return k;
 	}
 
-	public record Entry<T>(T item, long count) {
+	public record Entry<T> (T item, long count) {
+
 	}
 
 }

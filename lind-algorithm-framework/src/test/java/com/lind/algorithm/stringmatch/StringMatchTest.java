@@ -1,10 +1,12 @@
 package com.lind.algorithm.stringmatch;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.Test;
 
 import java.util.List;
-import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * 字符串匹配单元测试。
@@ -29,6 +31,8 @@ public class StringMatchTest {
 		assertTrue(matches.stream().anyMatch(m -> m.keyword().equals("she")));
 		assertTrue(matches.stream().anyMatch(m -> m.keyword().equals("he")));
 		assertTrue(matches.stream().anyMatch(m -> m.keyword().equals("hers")));
+		assertFalse(matches.stream().anyMatch(m -> m.keyword().equals("user")));
+
 	}
 
 }

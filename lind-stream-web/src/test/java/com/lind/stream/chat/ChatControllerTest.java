@@ -26,26 +26,17 @@ class ChatControllerTest {
 	void openAiStyleStreamEndsWithDone() {
 		webTestClient = webTestClient.mutate().responseTimeout(Duration.ofSeconds(30)).build();
 
-		webTestClient.post()
-				.uri("/v1/chat/completions")
-				.contentType(MediaType.APPLICATION_JSON)
-				.accept(MediaType.TEXT_EVENT_STREAM)
-				.bodyValue("""
+		webTestClient.post().uri("/v1/chat/completions").contentType(MediaType.APPLICATION_JSON)
+				.accept(MediaType.TEXT_EVENT_STREAM).bodyValue("""
 						{
 						  "model": "lind-demo",
 						  "stream": true,
 						  "messages": [{"role":"user","content":"hi"}]
 						}
-						""")
-				.exchange()
-				.expectStatus().isOk()
-				.expectHeader().contentTypeCompatibleWith(MediaType.TEXT_EVENT_STREAM)
-				.returnResult(String.class)
-				.getResponseBody()
-				.as(StepVerifier::create)
-				.thenConsumeWhile(chunk -> !chunk.contains("[DONE]"))
-				.expectNextMatches(chunk -> chunk.contains("[DONE]"))
-				.verifyComplete();
+						""").exchange().expectStatus().isOk().expectHeader()
+				.contentTypeCompatibleWith(MediaType.TEXT_EVENT_STREAM).returnResult(String.class).getResponseBody()
+				.as(StepVerifier::create).thenConsumeWhile(chunk -> !chunk.contains("[DONE]"))
+				.expectNextMatches(chunk -> chunk.contains("[DONE]")).verifyComplete();
 	}
 
 	@Test
@@ -54,12 +45,8 @@ class ChatControllerTest {
 
 		String body = webTestClient.get()
 				.uri(uriBuilder -> uriBuilder.path("/api/chat/stream").queryParam("q", "SSE").build())
-				.accept(MediaType.TEXT_EVENT_STREAM)
-				.exchange()
-				.expectStatus().isOk()
-				.expectBody(String.class)
-				.returnResult()
-				.getResponseBody();
+				.accept(MediaType.TEXT_EVENT_STREAM).exchange().expectStatus().isOk().expectBody(String.class)
+				.returnResult().getResponseBody();
 
 		assertThat(body).isNotBlank();
 		assertThat(body).contains("data:");
@@ -68,23 +55,17 @@ class ChatControllerTest {
 
 	@Test
 	void nonStreamReturnsJson() {
-		webTestClient.post()
-				.uri("/v1/chat/completions")
-				.contentType(MediaType.APPLICATION_JSON)
-				.accept(MediaType.APPLICATION_JSON)
-				.bodyValue("""
+		webTestClient.post().uri("/v1/chat/completions").contentType(MediaType.APPLICATION_JSON)
+				.accept(MediaType.APPLICATION_JSON).bodyValue("""
 						{
 						  "model": "lind-demo",
 						  "stream": false,
 						  "messages": [{"role":"user","content":"hello"}]
 						}
-						""")
-				.exchange()
-				.expectStatus().isOk()
-				.expectHeader().contentTypeCompatibleWith(MediaType.APPLICATION_JSON)
-				.expectBody()
-				.jsonPath("$.choices[0].message.role").isEqualTo("assistant")
-				.jsonPath("$.choices[0].message.content").isNotEmpty();
+						""").exchange().expectStatus().isOk().expectHeader()
+				.contentTypeCompatibleWith(MediaType.APPLICATION_JSON).expectBody()
+				.jsonPath("$.choices[0].message.role").isEqualTo("assistant").jsonPath("$.choices[0].message.content")
+				.isNotEmpty();
 	}
 
 	@Test

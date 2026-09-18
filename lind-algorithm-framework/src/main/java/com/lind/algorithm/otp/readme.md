@@ -59,8 +59,35 @@ String code = hotp.generate(counter);
 boolean ok = hotp.matches(code, counter);
 ```
 
-## 注意
+## 服务间调用（A → B）能用吗？
 
-- 密钥请用安全随机数生成并妥善保管；勿把明文 secret 提交到仓库。
-- 生产环境建议对成功验证的时间步做「防重放」（同一码不可重复使用）。
-- 与限流里的滑动窗口不同：这里窗口单位是 **时间步/计数器步**，不是请求时间戳队列。
+**可以，且通常比「每次请求带明文共享密钥 / 静态 API Key」更安全**，但不是服务间鉴权的终极方案。
+
+| 对比 | 静态共享密钥上送 | TOTP 上送 |
+|---|---|---|
+| 链路上传什么 | 长期有效的密钥本身 | 仅短时 OTP（默认数十秒级） |
+| 泄露后果 | 被截获即可无限调用，直到轮换密钥 | 截获的码很快过期；窗口内需再加防重放 |
+| 密钥是否出域 | 每次请求都出域 | 密钥只留在 A/B 本地 |
+| 前提 | 无 | A/B 时钟大致同步（NTP） |
+| 仍不足 | — | 密钥泄露后攻击者仍能算码；6 位需配限流；未绑定具体请求内容 |
+
+**结论**：相对「Header 里塞同一个 secret」，TOTP 更好（密钥不出网、码有时效）。  
+若要求更高，优先考虑：**请求签名（HMAC 含 method/path/body/timestamp）** 或 **mTLS**。TOTP 适合作为轻量升级，或叠加在已有网关鉴权上。
+
+推荐服务间用法：
+
+- 位数用 **8**，算法用 **SHA256**
+- `window=1` 容忍少量时钟偏差
+- 服务端对成功时间步做 **防重放**（见 `TotpServiceAuthenticator`）
+- 对失败校验做 **限流**，防 8 位码暴力猜
+
+```java
+// 服务 A
+Totp client = new Totp(sharedSecret, 8, 30, HmacAlgorithm.SHA256, 1);
+headers.put("X-Client-Id", "service-a");
+headers.put("X-Totp", client.now());
+
+// 服务 B
+TotpServiceAuthenticator auth = new TotpServiceAuthenticator(sharedSecret, 8, 30, HmacAlgorithm.SHA256, 1);
+auth.authenticate("service-a", headers.get("X-Totp"));
+```

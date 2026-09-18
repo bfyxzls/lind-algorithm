@@ -124,7 +124,7 @@ public final class DirectedGraph<V> {
 		return topologicalSort().isEmpty();
 	}
 
-	public record Edge<V>(V to, double weight) {
+	public record Edge<V> (V to, double weight) {
 	}
 
 }

@@ -63,7 +63,8 @@ public final class CronExpression {
 
 	public boolean matches(LocalDateTime time) {
 		Objects.requireNonNull(time, "time");
-		if (!minutes.contains(time.getMinute()) || !hours.contains(time.getHour()) || !months.contains(time.getMonthValue())) {
+		if (!minutes.contains(time.getMinute()) || !hours.contains(time.getHour())
+				|| !months.contains(time.getMonthValue())) {
 			return false;
 		}
 		boolean dayMatch = daysOfMonth.contains(time.getDayOfMonth());

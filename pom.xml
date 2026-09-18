@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://maven.apache.org/POM/4.0.0"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
@@ -10,11 +10,12 @@
     <packaging>pom</packaging>
 
     <name>lind-algorithm</name>
-    <description>lind-algorithm 多模块父工程：算法库 + 流式 Web 演示</description>
+    <description>lind-algorithm 多模块父工程：算法库 + 数据中间件封装 + 流式 Web 演示</description>
     <url>https://github.com/bfyxzls/lind-algorithm</url>
 
     <modules>
         <module>lind-algorithm-framework</module>
+        <module>lind-data-framework</module>
         <module>lind-stream-web</module>
     </modules>
 
@@ -28,6 +29,10 @@
         <maven-surefire-plugin.version>3.5.2</maven-surefire-plugin.version>
         <lombok.version>1.18.36</lombok.version>
         <logback.version>1.5.32</logback.version>
+        <jedis.version>5.2.0</jedis.version>
+        <mongodb.version>5.2.1</mongodb.version>
+        <elasticsearch-java.version>8.15.3</elasticsearch-java.version>
+        <mockito.version>5.14.2</mockito.version>
     </properties>
 
     <dependencyManagement>
@@ -41,7 +46,12 @@
             </dependency>
             <dependency>
                 <groupId>com.lind</groupId>
-                <artifactId>lind-algorithm</artifactId>
+                <artifactId>lind-algorithm-framework</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.lind</groupId>
+                <artifactId>lind-data-framework</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -60,6 +70,43 @@
                 <groupId>ch.qos.logback</groupId>
                 <artifactId>logback-classic</artifactId>
                 <version>${logback.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>redis.clients</groupId>
+                <artifactId>jedis</artifactId>
+                <version>${jedis.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.mongodb</groupId>
+                <artifactId>mongodb-driver-sync</artifactId>
+                <version>${mongodb.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>co.elastic.clients</groupId>
+                <artifactId>elasticsearch-java</artifactId>
+                <version>${elasticsearch-java.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.elasticsearch.client</groupId>
+                <artifactId>elasticsearch-rest-client</artifactId>
+                <version>${elasticsearch-java.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-databind</artifactId>
+                <version>2.17.2</version>
+            </dependency>
+            <dependency>
+                <groupId>org.mockito</groupId>
+                <artifactId>mockito-core</artifactId>
+                <version>${mockito.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.mockito</groupId>
+                <artifactId>mockito-junit-jupiter</artifactId>
+                <version>${mockito.version}</version>
+                <scope>test</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -95,6 +142,21 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
+            </plugin>
+            <!--代码格式插件，默认使用spring 规则 ./mvnw spring-javaformat:apply
+            在进行ctrl+alt+L组合键进行代码格式化时，样式也会生效的 -->
+            <plugin>
+                <groupId>io.spring.javaformat</groupId>
+                <artifactId>spring-javaformat-maven-plugin</artifactId>
+                <version>0.0.35</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>apply</goal>
+                        </goals>
+                        <phase>validate</phase>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

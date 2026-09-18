@@ -13,11 +13,11 @@ public class CstTest {
 
 	@Test
 	void keepsParenthesesInLexicalTokens() {
-		Cst.CstNode cst = Cst.parse("(1+2)*3");
+		Cst.CstNode cst = Cst.parse("(12+2)*3");
 		List<String> tokens = cst.lexicalTokens();
 		assertTrue(tokens.contains("("));
 		assertTrue(tokens.contains(")"));
-		assertEquals(List.of("(", "1", "+", "2", ")", "*", "3"), tokens);
+		assertEquals(List.of("(", "12", "+", "2", ")", "*", "3"), tokens);
 	}
 
 	@Test

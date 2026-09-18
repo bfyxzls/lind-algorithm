@@ -35,14 +35,13 @@ public class ChatController {
 	/**
 	 * OpenAI 风格：POST /v1/chat/completions，stream=true 时返回 SSE。
 	 */
-	@PostMapping(value = "/v1/chat/completions", produces = { MediaType.TEXT_EVENT_STREAM_VALUE,
-			MediaType.APPLICATION_JSON_VALUE })
+	@PostMapping(value = "/v1/chat/completions",
+			produces = { MediaType.TEXT_EVENT_STREAM_VALUE, MediaType.APPLICATION_JSON_VALUE })
 	public Object chatCompletions(@RequestBody ChatCompletionRequest request) {
 		if (!request.streaming()) {
 			return Mono.just(chatCompletionService.complete(request));
 		}
-		return chatCompletionService.streamChat(request).map(this::toJson)
-				.concatWith(Mono.just("[DONE]"))
+		return chatCompletionService.streamChat(request).map(this::toJson).concatWith(Mono.just("[DONE]"))
 				.map(data -> ServerSentEvent.builder(data).build());
 	}
 
@@ -62,9 +61,10 @@ public class ChatController {
 	@PostMapping(value = "/api/chat/stream", consumes = MediaType.TEXT_PLAIN_VALUE,
 			produces = MediaType.TEXT_EVENT_STREAM_VALUE)
 	public Flux<ServerSentEvent<String>> streamPost(@RequestBody Mono<String> body) {
-		return body.defaultIfEmpty("").flatMapMany(question -> chatCompletionService.streamTokens(question)
-				.map(token -> ServerSentEvent.builder(token).event("token").build())
-				.concatWith(Mono.just(ServerSentEvent.builder("[DONE]").event("done").build())));
+		return body.defaultIfEmpty("")
+				.flatMapMany(question -> chatCompletionService.streamTokens(question)
+						.map(token -> ServerSentEvent.builder(token).event("token").build())
+						.concatWith(Mono.just(ServerSentEvent.builder("[DONE]").event("done").build())));
 	}
 
 	/**

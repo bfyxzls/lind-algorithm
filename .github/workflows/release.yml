@@ -32,15 +32,20 @@ jobs:
         shell: bash
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
-          CORE="lind-algorithm/target/lind-algorithm-${VERSION}.jar"
+          CORE="lind-algorithm-framework/target/lind-algorithm-framework-${VERSION}.jar"
+          DATA="lind-data-framework/target/lind-data-framework-${VERSION}.jar"
           STREAM="lind-stream-web/target/lind-stream-web-${VERSION}.jar"
           if [[ ! -f "$CORE" ]]; then
-            CORE="$(ls lind-algorithm/target/lind-algorithm-*.jar | grep -vE 'sources|javadoc|original' | head -n1)"
+            CORE="$(ls lind-algorithm-framework/target/lind-algorithm-framework-*.jar | grep -vE 'sources|javadoc|original' | head -n1)"
+          fi
+          if [[ ! -f "$DATA" ]]; then
+            DATA="$(ls lind-data-framework/target/lind-data-framework-*.jar | grep -vE 'sources|javadoc|original' | head -n1)"
           fi
           if [[ ! -f "$STREAM" ]]; then
             STREAM="$(ls lind-stream-web/target/lind-stream-web-*.jar | grep -vE 'sources|javadoc|original' | head -n1)"
           fi
           echo "core=$CORE" >> "$GITHUB_OUTPUT"
+          echo "data=$DATA" >> "$GITHUB_OUTPUT"
           echo "stream=$STREAM" >> "$GITHUB_OUTPUT"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
@@ -51,6 +56,7 @@ jobs:
           generate_release_notes: true
           files: |
             ${{ steps.artifact.outputs.core }}
+            ${{ steps.artifact.outputs.data }}
             ${{ steps.artifact.outputs.stream }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

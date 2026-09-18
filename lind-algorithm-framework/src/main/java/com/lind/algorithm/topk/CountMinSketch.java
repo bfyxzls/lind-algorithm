@@ -58,7 +58,7 @@ public final class CountMinSketch {
 		int b = coefficients[row * 2 + 1];
 		int hash = key.hashCode();
 		long mixed = (long) a * hash + b;
-		return (int) Math.floorMod(mixed, width);
+		return Math.floorMod(mixed, width);
 	}
 
 }

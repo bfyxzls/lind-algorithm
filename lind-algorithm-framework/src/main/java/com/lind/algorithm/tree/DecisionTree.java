@@ -41,8 +41,7 @@ public class DecisionTree {
 					next = current.defaultBranch();
 				}
 				else {
-					throw new IllegalArgumentException(
-							"no branch for feature " + current.feature() + " = " + value);
+					throw new IllegalArgumentException("no branch for feature " + current.feature() + " = " + value);
 				}
 			}
 			current = next;

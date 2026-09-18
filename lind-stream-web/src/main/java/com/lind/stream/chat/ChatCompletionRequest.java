@@ -5,11 +5,7 @@ import java.util.List;
 /**
  * 聊天请求（对齐常见大模型 API 的精简字段）。
  */
-public record ChatCompletionRequest(
-		String model,
-		List<ChatMessage> messages,
-		Boolean stream,
-		Double temperature) {
+public record ChatCompletionRequest(String model, List<ChatMessage> messages, Boolean stream, Double temperature) {
 
 	public ChatCompletionRequest {
 		if (messages == null || messages.isEmpty()) {

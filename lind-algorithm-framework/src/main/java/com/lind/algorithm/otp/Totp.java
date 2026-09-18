@@ -7,9 +7,8 @@ import java.util.function.LongSupplier;
 /**
  * TOTP（Time-Based One-Time Password，RFC 6238）：将时间步作为 HOTP 计数器。
  * <p>
- * 验证采用<strong>滑动窗口</strong>：当前时间步为 {@code T} 时，接受
- * {@code [T - window, T + window]} 内任一时间步生成的验证码。这样用户在时钟略有偏差、
- * 或刚好跨过步长边界时，仍可在窗口内使用有效码。
+ * 验证采用<strong>滑动窗口</strong>：当前时间步为 {@code T} 时，接受 {@code [T - window, T + window]}
+ * 内任一时间步生成的验证码。这样用户在时钟略有偏差、 或刚好跨过步长边界时，仍可在窗口内使用有效码。
  * </p>
  * 默认：30 秒步长、6 位数字、HMAC-SHA1、窗口 {@code 1}（即前后各 1 个时间步，共最多 3 个码有效）。
  */
@@ -29,7 +28,8 @@ public final class Totp {
 	private final LongSupplier clockMillis;
 
 	public Totp(byte[] secret) {
-		this(secret, DEFAULT_DIGITS, DEFAULT_PERIOD_SECONDS, HmacAlgorithm.SHA1, DEFAULT_WINDOW, System::currentTimeMillis);
+		this(secret, DEFAULT_DIGITS, DEFAULT_PERIOD_SECONDS, HmacAlgorithm.SHA1, DEFAULT_WINDOW,
+				System::currentTimeMillis);
 	}
 
 	public Totp(byte[] secret, int digits, long periodSeconds, int window) {
@@ -132,9 +132,9 @@ public final class Totp {
 		Objects.requireNonNull(account, "account");
 		Objects.requireNonNull(base32Secret, "base32Secret");
 		String label = urlEncode(issuer) + ":" + urlEncode(account);
-		return "otpauth://totp/" + label + "?secret=" + base32Secret.replace(" ", "").toUpperCase()
-				+ "&issuer=" + urlEncode(issuer) + "&algorithm=" + algorithm().name() + "&digits=" + digits()
-				+ "&period=" + periodSeconds();
+		return "otpauth://totp/" + label + "?secret=" + base32Secret.replace(" ", "").toUpperCase() + "&issuer="
+				+ urlEncode(issuer) + "&algorithm=" + algorithm().name() + "&digits=" + digits() + "&period="
+				+ periodSeconds();
 	}
 
 	private static String urlEncode(String value) {

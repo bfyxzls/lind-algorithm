@@ -129,8 +129,8 @@ public final class Hotp {
 
 	private static int truncate(byte[] hash) {
 		int offset = hash[hash.length - 1] & 0x0F;
-		return ((hash[offset] & 0x7F) << 24) | ((hash[offset + 1] & 0xFF) << 16)
-				| ((hash[offset + 2] & 0xFF) << 8) | (hash[offset + 3] & 0xFF);
+		return ((hash[offset] & 0x7F) << 24) | ((hash[offset + 1] & 0xFF) << 16) | ((hash[offset + 2] & 0xFF) << 8)
+				| (hash[offset + 3] & 0xFF);
 	}
 
 	private String formatCode(int binary) {

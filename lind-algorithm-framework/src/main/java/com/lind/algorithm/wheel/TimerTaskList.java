@@ -63,8 +63,7 @@ final class TimerTaskList implements Delayed {
 	}
 
 	/**
-	 * 清空槽内任务并重置过期时间，再回调（先 reset 再重入，避免重入同一槽时
-	 * setExpiration 未入队随后又被置为 -1 导致任务永远卡住）。
+	 * 清空槽内任务并重置过期时间，再回调（先 reset 再重入，避免重入同一槽时 setExpiration 未入队随后又被置为 -1 导致任务永远卡住）。
 	 */
 	synchronized void flush(Consumer<TimerTaskEntry> consumer) {
 		List<TimerTaskEntry> entries = new ArrayList<>();
