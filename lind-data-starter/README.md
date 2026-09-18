@@ -2,7 +2,16 @@
 
 Spring Boot 3 Starter：在官方 Spring Data Redis / MongoDB / Elasticsearch 与 Apache HBase Client 之上提供场景封装与自动配置。
 
-与无link ../lind-data-frameless `lind-data-frameless`}（无 Spring、直连客户端）互补：Boot 应用优先本模块。
+与 [`lind-data-frameless`](../lind-data-frameless/README.md)（无 Spring、直连客户端）互补：Boot 应用优先本模块。
+
+## 包文档
+
+| 包 | 说明文档 |
+|---|---|
+| Redis | [redis/readme.md](src/main/java/com/lind/data/starter/redis/readme.md) |
+| MongoDB | [mongodb/readme.md](src/main/java/com/lind/data/starter/mongodb/readme.md) |
+| Elasticsearch | [elasticsearch/readme.md](src/main/java/com/lind/data/starter/elasticsearch/readme.md) |
+| HBase | [hbase/readme.md](src/main/java/com/lind/data/starter/hbase/readme.md) |
 
 ## 依赖
 
@@ -42,65 +51,31 @@ Spring Boot 3 Starter：在官方 Spring Data Redis / MongoDB / Elasticsearch �
 | `lind.data.elasticsearch.enabled` | `true` | `LindSpringElasticsearch`（需已有 `ElasticsearchOperations`） |
 | `lind.data.hbase.enabled` | `false` | `Connection` + `LindHBaseTemplate` |
 
-HBase 连接示例：
+连接信息使用 Spring Boot 官方属性；HBase 使用 `lind.data.hbase.*`，详见 [hbase/readme.md](src/main/java/com/lind/data/starter/hbase/readme.md)。
 
-```yaml
-lind:
-  data:
-    hbase:
-      enabled: true
-      zookeeper-quorum: 127.0.0.1
-      zookeeper-client-port: "2181"
-      zookeeper-znode-parent: /hbase
-```
-
-连接信息仍使用 Spring Boot 官方属性，例如：
-
-```yaml
-spring:
-  data:
-    redis:
-      host: 127.0.0.1
-    mongodb:
-      uri: mongodb://127.0.0.1:27017/demo
-    elasticsearch:
-      repositories:
-        enabled: true
-```
-
-## 用法示例
+## 快速用法
 
 ```java
-@Autowired
-LindSpringRedis redis;
-
+@Autowired LindSpringRedis redis;
 redis.cache().set("k", "v", Duration.ofMinutes(5));
-boolean locked = redis.lock("order:1", Duration.ofSeconds(30)).tryLock();
-boolean ok = redis.rateLimiter("api:ip", 100, Duration.ofSeconds(1)).tryAcquire();
+redis.lock("order:1", Duration.ofSeconds(30)).tryLock();
+redis.rateLimiter("api:ip", 100, Duration.ofSeconds(1)).tryAcquire();
 redis.delayQueue("jobs").scheduleAfterMillis("payload", 5_000);
-long id = redis.idGenerator("order:seq").nextId();
-```
+redis.idGenerator("order:seq").nextId();
 
-```java
-@Autowired
-LindSpringMongo mongo;
-
+@Autowired LindSpringMongo mongo;
 mongo.documents().insert(entity);
-long seq = mongo.documents().nextSequence("order");
-```
+mongo.documents().nextSequence("order");
+mongo.query().findAnd(Order.class, 1, 20,
+    Criteria.where("status").is("PAID"), Criteria.where("amount").gte(100));
+mongo.aggregation().groupCount("orders", "status");
 
-```java
-@Autowired
-LindSpringElasticsearch es;
-
+@Autowired LindSpringElasticsearch es;
 es.documents().save(doc);
-es.documents().match("title", "keyword", MyDoc.class);
-```
+es.search().multiMatch("耳机", List.of("title", "desc"), 1, 20, Product.class);
+es.aggregation().terms("brand.keyword", 10, Product.class);
 
-```java
-@Autowired
-LindHBaseTemplate hbase;
-
+@Autowired LindHBaseTemplate hbase;
 hbase.putString("t", "rk", "cf", "q", "v");
 ```
 
@@ -109,3 +84,4 @@ hbase.putString("t", "rk", "cf", "q", "v");
 - 使用 `META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports` 注册自动配置（Boot 3）。
 - `@ConditionalOnClass` / `@ConditionalOnBean` / `@ConditionalOnProperty` 保证按需装配。
 - 场景类可被用户自定义 Bean 覆盖（`@ConditionalOnMissingBean`）。
+- 场景单测 mock 底层 Template / Connection，不强制本机中间件。

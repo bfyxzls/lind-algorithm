@@ -22,4 +22,12 @@ public class LindSpringMongo {
 		return new SpringMongoDocuments(mongo);
 	}
 
+	public SpringMongoQuery query() {
+		return new SpringMongoQuery(mongo);
+	}
+
+	public SpringMongoAggregation aggregation() {
+		return new SpringMongoAggregation(mongo);
+	}
+
 }

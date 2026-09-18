@@ -3,7 +3,6 @@ package com.lind.data.starter.redis;
 import java.time.Duration;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
 /**

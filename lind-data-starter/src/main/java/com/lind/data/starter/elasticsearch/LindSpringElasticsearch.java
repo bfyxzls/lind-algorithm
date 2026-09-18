@@ -22,4 +22,12 @@ public class LindSpringElasticsearch {
 		return new SpringEsDocuments(operations);
 	}
 
+	public SpringEsSearch search() {
+		return new SpringEsSearch(operations);
+	}
+
+	public SpringEsAggregation aggregation() {
+		return new SpringEsAggregation(operations);
+	}
+
 }
