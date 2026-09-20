@@ -21,6 +21,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -57,7 +58,9 @@ class RedisScenarioTest {
 		LindSpringRedis redis = new LindSpringRedis(template);
 		assertThat(redis.template()).isSameAs(template);
 		assertThat(redis.cache()).isNotNull();
-		assertThat(redis.lock("k", Duration.ofSeconds(1))).isNotNull();
+		assertThat(redis.lock("k").isWatchdogEnabled()).isTrue();
+		assertThat(redis.lock("k", Duration.ofSeconds(1)).isWatchdogEnabled()).isFalse();
+		assertThat(redis.lock("k", Duration.ofSeconds(1), true).isWatchdogEnabled()).isTrue();
 		assertThat(redis.rateLimiter("rl", 10, Duration.ofSeconds(1))).isNotNull();
 		assertThat(redis.delayQueue("dq")).isNotNull();
 		assertThat(redis.idGenerator("seq")).isNotNull();
@@ -92,6 +95,7 @@ class RedisScenarioTest {
 		when(template.execute(any(RedisScript.class), anyList(), any())).thenReturn(1L);
 
 		SpringRedisLock lock = new SpringRedisLock(template, "lock:order:1", Duration.ofSeconds(30));
+		assertThat(lock.isWatchdogEnabled()).isFalse();
 		assertThat(lock.tryLock()).isTrue();
 		assertThat(lock.unlock()).isTrue();
 	}
@@ -102,6 +106,103 @@ class RedisScenarioTest {
 
 		SpringRedisLock lock = new SpringRedisLock(template, "lock:x", Duration.ofSeconds(5));
 		assertThat(lock.tryLock()).isFalse();
+		assertThat(lock.isLocked()).isFalse();
+	}
+
+	@Test
+	void watchdogLockRenewsUntilUnlock() throws Exception {
+		when(valueOps.setIfAbsent(eq("lock:wd"), anyString(), eq(Duration.ofSeconds(3)))).thenReturn(true);
+		when(template.execute(any(RedisScript.class), anyList(), anyString(), anyString())).thenReturn(1L);
+		when(template.execute(any(RedisScript.class), anyList(), anyString())).thenReturn(1L);
+
+		SpringRedisLock lock = new SpringRedisLock(template, "lock:wd", Duration.ofSeconds(3), true,
+				Duration.ofMillis(40));
+		assertThat(lock.isWatchdogEnabled()).isTrue();
+		assertThat(lock.renewInterval()).isEqualTo(Duration.ofMillis(40));
+		assertThat(lock.tryLock()).isTrue();
+		assertThat(lock.isLocked()).isTrue();
+
+		Thread.sleep(120);
+		verify(template, org.mockito.Mockito.atLeastOnce()).execute(any(RedisScript.class), anyList(), anyString(),
+				anyString());
+
+		assertThat(lock.unlock()).isTrue();
+		assertThat(lock.isLocked()).isFalse();
+		org.mockito.Mockito.clearInvocations(template);
+		Thread.sleep(80);
+		verify(template, never()).execute(any(RedisScript.class), anyList(), anyString(), anyString());
+	}
+
+	@Test
+	void watchdogStopsWhenRenewFails() throws Exception {
+		when(valueOps.setIfAbsent(eq("lock:lost"), anyString(), any(Duration.class))).thenReturn(true);
+		when(template.execute(any(RedisScript.class), anyList(), anyString(), anyString())).thenReturn(0L);
+
+		SpringRedisLock lock = new SpringRedisLock(template, "lock:lost", Duration.ofSeconds(3), true,
+				Duration.ofMillis(30));
+		assertThat(lock.tryLock()).isTrue();
+		Thread.sleep(100);
+		assertThat(lock.isLocked()).isFalse();
+	}
+
+	@Test
+	void tryRunAutoUnlocksWithoutFinally() {
+		when(valueOps.setIfAbsent(eq("lock:auto"), anyString(), any(Duration.class))).thenReturn(true);
+		when(template.execute(any(RedisScript.class), anyList(), anyString())).thenReturn(1L);
+
+		SpringRedisLock lock = new SpringRedisLock(template, "lock:auto", Duration.ofSeconds(5));
+		AtomicBoolean ran = new AtomicBoolean(false);
+		assertThat(lock.tryRun(() -> ran.set(true))).isTrue();
+		assertThat(ran).isTrue();
+		assertThat(lock.isLocked()).isFalse();
+		verify(template).execute(any(RedisScript.class), anyList(), anyString());
+	}
+
+	@Test
+	void tryRunReturnsFalseWhenLockBusy() {
+		when(valueOps.setIfAbsent(eq("lock:busy"), anyString(), any(Duration.class))).thenReturn(false);
+
+		SpringRedisLock lock = new SpringRedisLock(template, "lock:busy", Duration.ofSeconds(5));
+		assertThat(lock.tryRun(() -> {
+			throw new IllegalStateException("should not run");
+		})).isFalse();
+		assertThat(lock.isLocked()).isFalse();
+	}
+
+	@Test
+	void supplyReturnsValueAndUnlocks() {
+		when(valueOps.setIfAbsent(eq("lock:supply"), anyString(), any(Duration.class))).thenReturn(true);
+		when(template.execute(any(RedisScript.class), anyList(), anyString())).thenReturn(1L);
+
+		SpringRedisLock lock = new SpringRedisLock(template, "lock:supply");
+		assertThat(lock.supply(() -> 42)).isEqualTo(42);
+		assertThat(lock.isLocked()).isFalse();
+	}
+
+	@Test
+	void watchdogReleasesWhenOwnerThreadDies() throws Exception {
+		when(valueOps.setIfAbsent(eq("lock:dead"), anyString(), any(Duration.class))).thenReturn(true);
+		when(template.execute(any(RedisScript.class), anyList(), anyString())).thenReturn(1L);
+
+		SpringRedisLock lock = new SpringRedisLock(template, "lock:dead", Duration.ofSeconds(3), true,
+				Duration.ofMillis(30));
+		Thread owner = new Thread(() -> assertThat(lock.tryLock()).isTrue());
+		owner.start();
+		owner.join();
+		Thread.sleep(100);
+		assertThat(lock.isLocked()).isFalse();
+		verify(template, org.mockito.Mockito.atLeastOnce()).execute(any(RedisScript.class), anyList(), anyString());
+	}
+
+	@Test
+	void unlockIsIdempotent() {
+		when(valueOps.setIfAbsent(eq("lock:once"), anyString(), any(Duration.class))).thenReturn(true);
+		when(template.execute(any(RedisScript.class), anyList(), anyString())).thenReturn(1L);
+
+		SpringRedisLock lock = new SpringRedisLock(template, "lock:once", Duration.ofSeconds(5));
+		assertThat(lock.tryLock()).isTrue();
+		assertThat(lock.unlock()).isTrue();
+		assertThat(lock.unlock()).isTrue();
 	}
 
 	@Test

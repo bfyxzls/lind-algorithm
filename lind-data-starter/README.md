@@ -58,7 +58,8 @@ Spring Boot 3 Starter：在官方 Spring Data Redis / MongoDB / Elasticsearch �
 ```java
 @Autowired LindSpringRedis redis;
 redis.cache().set("k", "v", Duration.ofMinutes(5));
-redis.lock("order:1", Duration.ofSeconds(30)).tryLock();
+redis.tryRun("order:1", () -> { /* 自动 unlock */ });
+redis.lock("order:2", Duration.ofSeconds(30)).tryRun(() -> { /* 固定租约 */ });
 redis.rateLimiter("api:ip", 100, Duration.ofSeconds(1)).tryAcquire();
 redis.delayQueue("jobs").scheduleAfterMillis("payload", 5_000);
 redis.idGenerator("order:seq").nextId();
