@@ -18,6 +18,7 @@
         <module>lind-data-frameless</module>
         <module>lind-data-starter</module>
         <module>lind-stream-web</module>
+        <module>lind-delay-task-web</module>
     </modules>
 
     <properties>
@@ -79,6 +80,11 @@
                 <version>${logback.version}</version>
             </dependency>
             <dependency>
+                <groupId>ch.qos.logback</groupId>
+                <artifactId>logback-core</artifactId>
+                <version>${logback.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>redis.clients</groupId>
                 <artifactId>jedis</artifactId>
                 <version>${jedis.version}</version>
@@ -132,6 +138,7 @@
                     <version>${maven-compiler-plugin.version}</version>
                     <configuration>
                         <release>${java.version}</release>
+                        <parameters>true</parameters>
                     </configuration>
                 </plugin>
                 <plugin>

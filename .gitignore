@@ -30,3 +30,6 @@ Thumbs.db
 *.log
 *.tmp
 *.bak
+
+# Local H2 delay-task DB
+data/

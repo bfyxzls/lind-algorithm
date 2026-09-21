@@ -1,0 +1,113 @@
+:root {
+  --bg: #0f1419;
+  --card: #1a2332;
+  --text: #e7ecf3;
+  --muted: #9aa7b8;
+  --accent: #3b82f6;
+  --danger: #ef4444;
+  --border: #2a3648;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: "Segoe UI", system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  padding: 24px;
+}
+.top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+h1 { margin: 0; font-size: 1.4rem; }
+.btn {
+  display: inline-block;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text);
+  padding: 8px 14px;
+  border-radius: 8px;
+  text-decoration: none;
+  cursor: pointer;
+  font-size: 14px;
+}
+.btn.primary { background: var(--accent); border-color: var(--accent); }
+.btn.danger { color: #fecaca; border-color: var(--danger); }
+.btn.small { padding: 4px 8px; font-size: 12px; }
+.flash {
+  background: #14532d;
+  border: 1px solid #166534;
+  padding: 10px 14px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+.flash.error { background: #7f1d1d; border-color: #991b1b; }
+.filters {
+  display: flex;
+  gap: 12px;
+  align-items: end;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--muted);
+}
+input, select, textarea {
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 8px;
+  padding: 8px 10px;
+  min-width: 180px;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--card);
+  border-radius: 12px;
+  overflow: hidden;
+}
+th, td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  font-size: 13px;
+  vertical-align: top;
+}
+th { color: var(--muted); font-weight: 600; }
+.mono { font-family: ui-monospace, Consolas, monospace; font-size: 12px; }
+.tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #243044;
+  font-size: 12px;
+}
+.actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.actions form { margin: 0; }
+.empty { text-align: center; color: var(--muted); padding: 28px; }
+.pager {
+  margin-top: 16px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  color: var(--muted);
+}
+.card {
+  max-width: 520px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+small { color: var(--muted); }

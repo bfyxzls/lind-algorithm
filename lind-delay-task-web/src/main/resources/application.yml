@@ -1,0 +1,22 @@
+server:
+  port: 8090
+
+spring:
+  application:
+    name: lind-delay-task-web
+  datasource:
+    url: jdbc:mysql://localhost:3306/delay_task?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=UTF-8&useSSL=false&allowPublicKeyRetrieval=true
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: root
+    password: 123456
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema-delay.sql
+  thymeleaf:
+    cache: false
+
+
+logging:
+  level:
+    com.lind.delay: INFO

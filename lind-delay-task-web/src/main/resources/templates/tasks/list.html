@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>延时任务管理</title>
+  <link rel="stylesheet" th:href="@{/css/app.css}"/>
+</head>
+<body>
+<header class="top">
+  <h1>延时任务管理</h1>
+  <a class="btn primary" th:href="@{/admin/tasks/new}">新增任务</a>
+</header>
+
+<div class="flash" th:if="${message}" th:text="${message}"></div>
+<div class="flash error" th:if="${error}" th:text="${error}"></div>
+
+<form class="filters" method="get" th:action="@{/admin/tasks}">
+  <label>
+    状态
+    <select name="status">
+      <option value="" th:selected="${status == null or status == ''}">全部</option>
+      <option th:each="s : ${statuses}" th:value="${s}" th:text="${s}" th:selected="${s == status}"></option>
+    </select>
+  </label>
+  <label>
+    每页
+    <select name="size">
+      <option th:value="10" th:selected="${size == 10}">10</option>
+      <option th:value="20" th:selected="${size == 20}">20</option>
+      <option th:value="50" th:selected="${size == 50}">50</option>
+    </select>
+  </label>
+  <input type="hidden" name="page" value="1"/>
+  <button type="submit" class="btn">筛选</button>
+</form>
+
+<table>
+  <thead>
+  <tr>
+    <th>任务 ID</th>
+    <th>业务</th>
+    <th>bizId</th>
+    <th>延时(ms)</th>
+    <th>创建时间</th>
+    <th>计划执行</th>
+    <th>状态</th>
+    <th>操作</th>
+  </tr>
+  </thead>
+  <tbody>
+  <tr th:if="${#lists.isEmpty(rows)}">
+    <td colspan="8" class="empty">暂无任务</td>
+  </tr>
+  <tr th:each="row : ${rows}">
+    <td class="mono" th:text="${row.id()}"></td>
+    <td th:text="${row.bizType()}"></td>
+    <td th:text="${row.bizId()}"></td>
+    <td th:text="${row.delayMs()}"></td>
+    <td th:text="${row.createdAt()}"></td>
+    <td th:text="${row.executeAt()}"></td>
+    <td><span class="tag" th:text="${row.status()}"></span></td>
+    <td class="actions">
+      <form th:if="${row.status() == 'PENDING' or row.status() == 'RUNNING'}" method="post"
+            th:action="@{/admin/tasks/cancel}">
+        <input type="hidden" name="taskId" th:value="${row.id()}"/>
+        <button type="submit" class="btn small">取消</button>
+      </form>
+      <form method="post" th:action="@{/admin/tasks/delete}"
+            onsubmit="return confirm('确认删除该任务？');">
+        <input type="hidden" name="taskId" th:value="${row.id()}"/>
+        <button type="submit" class="btn small danger">删除</button>
+      </form>
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+<nav class="pager" th:if="${totalPages > 0}">
+  <span th:text="'共 ' + ${total} + ' 条 / ' + ${totalPages} + ' 页'"></span>
+  <a class="btn small" th:if="${page > 1}"
+     th:href="@{/admin/tasks(page=${page - 1}, size=${size}, status=${status})}">上一页</a>
+  <span th:text="${page}"></span>
+  <a class="btn small" th:if="${page < totalPages}"
+     th:href="@{/admin/tasks(page=${page + 1}, size=${size}, status=${status})}">下一页</a>
+</nav>
+</body>
+</html>

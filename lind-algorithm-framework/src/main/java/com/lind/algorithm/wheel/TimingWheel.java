@@ -1,5 +1,6 @@
 package com.lind.algorithm.wheel;
 
+import java.util.List;
 import java.util.concurrent.DelayQueue;
 
 /**
@@ -75,6 +76,19 @@ final class TimingWheel {
 			}
 		}
 		return overflowWheel;
+	}
+
+	/**
+	 * 收集本层及上层溢出轮中仍挂在槽上的任务（含已取消但尚未摘链的节点，由调用方过滤）。
+	 */
+	void collect(List<TimerTaskEntry> out) {
+		for (TimerTaskList bucket : buckets) {
+			bucket.forEach(out::add);
+		}
+		TimingWheel overflow = overflowWheel;
+		if (overflow != null) {
+			overflow.collect(out);
+		}
 	}
 
 }

@@ -157,6 +157,28 @@ public class HashedWheelTimerTest {
 		assertTrue(t1.isExpired());
 	}
 
+	@Test
+	void scheduledTasksReturnsPendingDeadlinesInOrder() {
+		timer = newTimer(10, 4);
+		long now = System.currentTimeMillis();
+		Timeout later = timer.newTimeout(t -> {
+		}, 5, TimeUnit.SECONDS);
+		Timeout sooner = timer.newTimeout(t -> {
+		}, 2, TimeUnit.SECONDS);
+		Timeout cancelled = timer.newTimeout(t -> {
+		}, 8, TimeUnit.SECONDS);
+		assertTrue(cancelled.cancel());
+
+		List<ScheduledTask> tasks = timer.scheduledTasks();
+		assertEquals(2, tasks.size());
+		assertEquals(sooner, tasks.get(0).timeout());
+		assertEquals(later, tasks.get(1).timeout());
+		assertTrue(tasks.get(0).deadlineEpochMs() >= now + 1_500);
+		assertTrue(tasks.get(1).deadlineEpochMs() >= now + 4_500);
+		assertTrue(tasks.get(0).deadlineEpochMs() <= tasks.get(1).deadlineEpochMs());
+		assertEquals(tasks.get(0).deadlineEpochMs(), sooner.deadlineMs());
+	}
+
 	private static HashedWheelTimer newTimer(long tickMs, int wheelSize) {
 		ExecutorService worker = Executors.newSingleThreadExecutor();
 		return new HashedWheelTimer(tickMs, wheelSize, worker, true, 30, HashedWheelTimer.TaskExceptionHandler.NOOP);

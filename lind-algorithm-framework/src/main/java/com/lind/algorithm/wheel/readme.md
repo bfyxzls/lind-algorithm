@@ -8,7 +8,8 @@
 
 | 类型 | 说明 |
 |---|---|
-| `HashedWheelTimer` | 定时器：`newTimeout` / `stop` / `pendingTasks` |
+| `HashedWheelTimer` | 定时器：`newTimeout` / `scheduledTasks` / `stop` / `pendingTasks` |
+| `ScheduledTask` | 快照项：任务句柄 + 计划执行时间 `deadline()` |
 | `TimerTask` | 到期回调 `run(Timeout)` |
 | `Timeout` | 调度句柄：`cancel` / `isCancelled` / `isExpired` |
 
@@ -45,6 +46,44 @@ HashedWheelTimer timer = new HashedWheelTimer(
 | vs 单层巨大时间轮 | 层级溢出轮覆盖小时级延时，无需百万级槽数组 |
 | 精度 | 取决于 `tickMs`，不适合亚毫秒硬实时 |
 
+## bean组件，业务层方便插入新任务
+生命周期大致是：
+```
+new HashedWheelTimer()     ← 初始化（空轮）
+        │
+        ▼
+newTimeout / newTimeout…   ← 运行期可反复写入（API 插件就走这里）
+        │
+        ▼
+stop() / close()           ← 之后不能再写
+```
+把 进程级单例 的时间轮注入插件，HTTP/RPC 里只调 newTimeout：
+```java
+@Component
+public class DelayTaskPlugin {
+
+    private final HashedWheelTimer timer; // 应用启动时建好，全局共用
+
+    public DelayTaskPlugin(HashedWheelTimer timer) {
+        this.timer = timer;
+    }
+
+    /** 插件 API：频繁写入延时任务 */
+    public Timeout schedule(String bizId, long delayMs, Runnable action) {
+        return timer.newTimeout(t -> action.run(), delayMs, TimeUnit.MILLISECONDS);
+    }
+
+    /** 查看轮上尚未到期的任务及其执行时间点 */
+    public List<ScheduledTask> pending() {
+        return timer.scheduledTasks();
+    }
+}
+```
+web api调用组件
+```
+// Controller / 插件入口 —— 每次请求写一条即可
+timeoutHandle = delayTaskPlugin.schedule(orderId, 30 * 60_000L, () -> cancelOrder(orderId));
+```
 
 # 时间轮是否要持久化
 
@@ -88,10 +127,35 @@ HashedWheelTimer timer = new HashedWheelTimer(
 
 即便如此，持久化的通常是**任务记录**（绝对到期时间 + 业务主键 + 状态），而不是时间轮的槽位结构。启动时：读未完成任务 → 算剩余 delay → 再丢进时间轮。
 
+### 推荐状态机（生产最小集）
+
+```text
+PENDING --claim--> RUNNING --ok--> DONE
+   |                  |
+ cancel            fail/retry
+   v                  v
+CANCELLED         PENDING(新 execute_at) 或 DEAD
+```
+
+| 步骤 | 正确做法 |
+|---|---|
+| 写入 | **先写库**（`PENDING` + 绝对时间 `execute_at`），成功后再 `newTimeout` |
+| 启动 | 查 `PENDING`（及卡住的 `RUNNING`），`delay = max(0, execute_at - now)` 灌轮 |
+| 到期 | **先 CAS** `PENDING → RUNNING`（抢到才执行），**不要**一出轮就删库 |
+| 完成 | 业务成功后再 `DONE` / 删除；失败则改回 `PENDING` 并推迟 `execute_at` 再入轮 |
+| 取消 | 库改为 `CANCELLED`，并 `Timeout.cancel()` |
+| 列表 | 以 DB 为准；轮上 `scheduledTasks()` 仅运维辅助 |
+
+**错误示范**：从时间轮取出任务就删除持久化 → 取出后、业务跑完前进程崩溃 = 任务永久丢失。
+
+出轮只表示「该触发了」；删库/完成看**业务结果**，不看出轮动作。
+
+本仓库演示实现见独立模块 `lind-delay-task-web`（MySQL 表 + 启动灌轮 + claim + 管理页）。
+
 ### 结论
 
 - **不需要、也不建议持久化时间轮本体。**
 - 要可靠：持久化业务任务，重启后重新调度；执行端做幂等。
 - 要超大规模可靠延时：用消息队列 / 任务表，时间轮只做单机内存优化。
 
-一句话：**时间轮管快，持久层管准。**
+一句话：**时间轮管快，持久层管准；删库看业务结果，不看出轮动作。**

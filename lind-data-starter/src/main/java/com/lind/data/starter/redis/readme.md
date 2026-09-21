@@ -11,7 +11,7 @@
 | `SpringRedisRateLimiter` | ZSET 滑动窗口 | 接口 / IP 限流 |
 | `SpringRedisDelayQueue` | ZSET score=执行时间 | 延时关单、延时通知 |
 | `SpringRedisIdGenerator` | INCR / INCRBY | 全局订单号、序列 |
-
+ 
 ## 启用条件
 
 1. classpath 存在 `StringRedisTemplate`（通常引入 `spring-boot-starter-data-redis`）

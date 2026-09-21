@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>新增延时任务</title>
+  <link rel="stylesheet" th:href="@{/css/app.css}"/>
+</head>
+<body>
+<header class="top">
+  <h1>新增延时任务</h1>
+  <a class="btn" th:href="@{/admin/tasks}">返回列表</a>
+</header>
+
+<div class="flash error" th:if="${error}" th:text="${error}"></div>
+
+<form class="card" method="post" th:action="@{/admin/tasks}">
+  <label>
+    业务类型 bizType，根据类型进行方法调用
+    <input name="bizType" th:value="${bizType}" required/>
+  </label>
+  <label>
+    业务 ID bizId，方法调用时的参数
+    <input name="bizId" placeholder="例如用户ID / 订单号" required/>
+  </label>
+  <label>
+    延时（秒）
+    <input name="delaySeconds" type="number" min="0" value="60" required/>
+    <small>真实执行时间 = 创建时间 + 延时；重启后按该绝对时间入轮，不会从「现在」重新计时。</small>
+  </label>
+  <label>
+    Payload（可选），方法调用时的扩展参数
+    <textarea name="payload" rows="3" placeholder="业务参数 JSON / 文本"></textarea>
+  </label>
+  <button type="submit" class="btn primary">创建并入时间轮</button>
+</form>
+</body>
+</html>

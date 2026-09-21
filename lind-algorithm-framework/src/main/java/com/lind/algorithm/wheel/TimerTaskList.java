@@ -50,6 +50,17 @@ final class TimerTaskList implements Delayed {
 		}
 	}
 
+	/**
+	 * 遍历槽内任务（不移除）。调用方需自行跳过已取消节点。
+	 */
+	synchronized void forEach(Consumer<TimerTaskEntry> consumer) {
+		TimerTaskEntry head = root.next;
+		while (head != root) {
+			consumer.accept(head);
+			head = head.next;
+		}
+	}
+
 	void remove(TimerTaskEntry entry) {
 		synchronized (this) {
 			if (entry.list == this) {

@@ -16,6 +16,11 @@ public interface Timeout {
 	TimerTask task();
 
 	/**
+	 * @return 计划执行时间（epoch 毫秒）
+	 */
+	long deadlineMs();
+
+	/**
 	 * 尝试取消尚未执行的任务。
 	 * @return {@code true} 取消成功；已到期或已取消时返回 {@code false}
 	 */

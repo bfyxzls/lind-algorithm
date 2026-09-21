@@ -1,5 +1,8 @@
 package com.lind.algorithm.wheel;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.DelayQueue;
 import java.util.concurrent.Executor;
@@ -136,6 +139,25 @@ public final class HashedWheelTimer implements AutoCloseable {
 	 */
 	public long completedTasks() {
 		return completed.get();
+	}
+
+	/**
+	 * 当前仍挂在时间轮上、尚未到期的任务快照，按计划执行时间升序。
+	 * <p>
+	 * 不含已取消、已到期（含正在执行）的任务。结果是调用瞬间的副本，之后任务仍可能被推进线程摘除。
+	 */
+	public List<ScheduledTask> scheduledTasks() {
+		List<TimerTaskEntry> entries = new ArrayList<>();
+		synchronized (this) {
+			timingWheel.collect(entries);
+		}
+		entries.removeIf(entry -> entry.isCancelled() || entry.isExpired() || entry.task() == null);
+		entries.sort(Comparator.comparingLong(TimerTaskEntry::deadlineMs));
+		List<ScheduledTask> snapshot = new ArrayList<>(entries.size());
+		for (TimerTaskEntry entry : entries) {
+			snapshot.add(new ScheduledTask(entry, entry.deadlineMs()));
+		}
+		return List.copyOf(snapshot);
 	}
 
 	/**

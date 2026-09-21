@@ -12,11 +12,15 @@
 | `lind-data-frameless` | 无 Spring：Jedis / Mongo Sync / ES Java API 场景封装 |
 | `lind-data-starter` | Spring Boot Starter：Spring Data Redis/Mongo/ES + HBase 自动配置 |
 | `lind-stream-web` | 流式 Web：`text/event-stream`，类大模型逐段返回 |
+| `lind-delay-task-web` | 延时任务：时间轮 + MySQL 持久化 + 管理页 |
 
 ```bash
 mvn clean test
 mvn -pl lind-stream-web -am spring-boot:run
 # 打开 http://localhost:8088/
+
+mvn -pl lind-delay-task-web -am spring-boot:run
+# 打开 http://localhost:8090/admin/tasks
 ```
 
 ## 算法库一览（`lind-algorithm-framework`）

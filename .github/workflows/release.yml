@@ -36,6 +36,7 @@ jobs:
           FRAMELESS="lind-data-frameless/target/lind-data-frameless-${VERSION}.jar"
           STARTER="lind-data-starter/target/lind-data-starter-${VERSION}.jar"
           STREAM="lind-stream-web/target/lind-stream-web-${VERSION}.jar"
+          DELAY="lind-delay-task-web/target/lind-delay-task-web-${VERSION}.jar"
           if [[ ! -f "$CORE" ]]; then
             CORE="$(ls lind-algorithm-framework/target/lind-algorithm-framework-*.jar | grep -vE 'sources|javadoc|original' | head -n1)"
           fi
@@ -48,10 +49,14 @@ jobs:
           if [[ ! -f "$STREAM" ]]; then
             STREAM="$(ls lind-stream-web/target/lind-stream-web-*.jar | grep -vE 'sources|javadoc|original' | head -n1)"
           fi
+          if [[ ! -f "$DELAY" ]]; then
+            DELAY="$(ls lind-delay-task-web/target/lind-delay-task-web-*.jar | grep -vE 'sources|javadoc|original' | head -n1)"
+          fi
           echo "core=$CORE" >> "$GITHUB_OUTPUT"
           echo "frameless=$FRAMELESS" >> "$GITHUB_OUTPUT"
           echo "starter=$STARTER" >> "$GITHUB_OUTPUT"
           echo "stream=$STREAM" >> "$GITHUB_OUTPUT"
+          echo "delay=$DELAY" >> "$GITHUB_OUTPUT"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Create GitHub Release
@@ -64,5 +69,6 @@ jobs:
             ${{ steps.artifact.outputs.frameless }}
             ${{ steps.artifact.outputs.starter }}
             ${{ steps.artifact.outputs.stream }}
+            ${{ steps.artifact.outputs.delay }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -27,7 +27,8 @@ final class TimerTaskEntry implements Timeout {
 		this.deadlineMs = deadlineMs;
 	}
 
-	long deadlineMs() {
+	@Override
+	public long deadlineMs() {
 		return deadlineMs;
 	}
 
