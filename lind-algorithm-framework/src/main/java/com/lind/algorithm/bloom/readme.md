@@ -1,6 +1,6 @@
 # bloom 包（com.lind.algorithm.bloom）
 
-Bloom 过滤器：可能误判存在，不会漏判「一定不存在」。
+Bloom 过滤器：可能误判存在，不会漏判「一定不存在」，标准 Bloom 不能单点删除。
 
 | 场景 | 说明 |
 |---|---|
@@ -8,39 +8,86 @@ Bloom 过滤器：可能误判存在，不会漏判「一定不存在」。
 | LSM / 字典粗筛 | 减少磁盘点查 |
 | 海量去重粗判 | 内存远小于 HashSet |
 
+## 业务场景子包
+
+| 子包 | 场景 | 入口类 |
+|---|---|---|
+| `crawler` | 短链爬虫 URL 去重 | `BloomUrlDeduplicator` |
+| `recommend` | 推荐系统重复推荐 / 内容入库去重 | `BloomRecommendDeduplicator` |
+| `ads` | 广告曝光频控 | `BloomAdFrequencyControl` |
+| `blacklist` | 黑名单前置判断 | `BloomBlacklist` |
+
+详细流程见 [三大使用场景说明.md](三大使用场景说明.md)。
+
 ```java
 BloomFilter filter = new BloomFilter(1_000_000, 0.01);
 filter.put("user:1");
 filter.mightContain("user:1");
 ```
 
-### 🗺️ 核心使用场景
+### 1. 短链爬虫 URL 去重（`crawler`）
 
-BloomFilter 的核心价值在于**用极小的内存代价，快速排除“肯定不存在”的元素**，从而避免昂贵的数据库或磁盘查询。其典型应用包括：
+```java
+UrlDedupStore store = new InMemoryUrlDedupStore();
+BloomUrlDeduplicator dedup = new BloomUrlDeduplicator(store, 1_000_000, 0.01);
 
-*   **缓存穿透防护**：这是最经典的应用。将所有可能的有效数据 key 预先存入过滤器。当请求到达时，先查过滤器，如果判断不存在，则直接返回，避免查询数据库。
-*   **大规模数据去重**：
-    *   **爬虫 URL 去重**：在分布式爬虫系统中，使用 BloomFilter 快速判断一个 URL 是否已经被抓取过，避免重复劳动。
-    *   **推荐/广告去重**：确保用户不会频繁看到同一广告或推荐内容。
-*   **黑名单/风控名单过滤**：快速判断一个 IP、手机号、邮箱或信用卡号是否在垃圾邮件列表、欺诈名单或黑名单中。
-*   **数据库查询优化**：在 HBase、RocksDB 等数据库中，BloomFilter 被用来在读取磁盘前快速判断某个 key 是否可能存在于某个数据块中，从而减少不必要的 I/O 操作。
+if (dedup.tryClaim(shortOrLongUrl)) {
+    // 一定/确认未抓过：入队抓取
+}
+// 抓取完成后写入最终长链与内容指纹
+dedup.markFetched(finalUrl, contentFingerprint);
+```
 
-### ⚙️ 工作流程
+- 写入前用 `UrlNormalizer` 去掉 fragment、统一 host、默认端口、排序 query。
+- Bloom 未命中一定没抓过；命中后回源，假阳性仍可抓，避免漏抓。
 
-BloomFilter 的工作流程分为**初始化**、**添加元素**和**查询元素**三个步骤。
+### 2. 推荐去重（`recommend`）
 
-1.  **初始化**：创建一个长度为 **m** 的位数组（Bit Array），所有位初始化为 **0**。同时，选定 **k** 个相互独立的哈希函数。
-2.  **添加元素**：当要添加一个元素时，用这 **k** 个哈希函数分别对该元素进行计算，得到 **k** 个哈希值。然后，将位数组中这 **k** 个哈希值对应的位置都置为 **1**。
-3.  **查询元素**：当要查询一个元素是否存在时，同样用这 **k** 个哈希函数计算得到 **k** 个位置。
-    *   如果这 **k** 个位置中**有任何一位是 0**，那么该元素**一定不存在**于集合中。
-    *   如果这 **k** 个位置**全部是 1**，那么该元素**可能存在**于集合中（存在一定的误判率/假阳性）。
+```java
+RecommendDedupStore store = new InMemoryRecommendDedupStore();
+BloomRecommendDeduplicator dedup = new BloomRecommendDeduplicator(store, 1_000_000, 0.01);
 
-### 🛠️ 持久化的实现方式
+List<String> candidates = dedup.filterUnseen(userId, recalledIds); // 或带 windowKey 按天
+dedup.markRecommended(userId, shownContentId);
+dedup.tryAdmitContent(simHashFingerprint); // 内容库去重
+```
 
-根据你的技术栈和架构，可以选择不同的持久化方案：
+- 用户维度 key：`userId + contentId`（可选时间窗口）。
+- 内容维度 key：内容指纹；命中后应交精确相似度判断。
 
-*   **基于文件序列化**：将位数组序列化为二进制文件保存到本地磁盘。服务启动时，从该文件反序列化恢复。一些库（如 Java 的 `sangupta/bloomfilter`）直接提供了 `FileBackedBitArray` 或内存映射文件（MMap）的支持，后者性能更高。
-*   **使用 Redis 等外部存储**：这是分布式系统中的首选方案。
-    *   **RedisBloom 模块**：提供了原生的 BloomFilter 命令（如 `BF.ADD`, `BF.EXISTS`），并支持通过 `BF.SCANDUMP` 和 `BF.LOADCHUNK` 命令进行增量备份和恢复，适合大型过滤器。
-    *   **自研基于 Redis Bitmap**：也可以利用 Redis 的 `SETBIT` / `GETBIT` 命令自行实现，但需要自己管理哈希和持久化逻辑。
-*   **定期快照与恢复**：无论采用哪种存储，都建议建立**定期快照**机制。例如，可以每小时将过滤器状态序列化到磁盘或 S3 等对象存储中。服务重启时，从最新的快照恢复，即可最大程度地减少数据丢失。
+### 3. 广告曝光频控（`ads`）
+
+```java
+AdImpressionStore store = new InMemoryAdImpressionStore();
+BloomAdFrequencyControl freq = new BloomAdFrequencyControl(store, FrequencyWindow.DAY, 1_000_000, 0.01);
+
+List<String> eligible = freq.filterEligible(userId, candidateAds, System.currentTimeMillis());
+freq.markImpressed(userId, shownAdId, System.currentTimeMillis());
+```
+
+- Key：`userId + adId + 小时/天分片`。分片过期后整片丢弃，规避标准 Bloom 无法删除。
+- 假阳性会少曝光，命中必须回源（Redis 计数 / 精确频控）。
+
+### 4. 黑名单（`blacklist`）
+
+```java
+BlacklistStore store = new InMemoryBlacklistStore();
+BloomBlacklist blacklist = new BloomBlacklist(store, 1_000_000, 0.01);
+
+blacklist.block("user:1");
+if (blacklist.isBlocked("user:1")) {
+    // 拒绝
+}
+blacklist.unblock("user:1"); // 删库后重建
+```
+
+1. **写入**：先落真相源，再 `put`。
+2. **启动**：构造时全量灌入 Bloom。
+3. **查询**：一定不在 → 不回源；可能在 → 回源确认。
+4. **删除**：标准 Bloom 不能单点删，解禁后 `reload` 重建。
+
+### 持久化
+
+- 文件序列化 / RedisBloom（`BF.ADD` / `BF.EXISTS`）/ Redis Bitmap。
+- 各场景的 `*Store` 换成 DB 或 Redis 即可，入口类 API 不变。
+- 建议定期快照或按时间分片，控制误判率与过期。

@@ -34,7 +34,7 @@ mvn -pl lind-delay-task-web -am spring-boot:run
 | `ratelimit` | 令牌桶 / 漏桶 / 滑动窗口 |
 | `circuit` | 熔断器（Closed / Open / Half-Open） |
 | `retry` | 指数退避重试（可选抖动） |
-| `bloom` | Bloom 过滤器 |
+| `bloom` | Bloom 过滤器；场景子包 `crawler` / `recommend` / `ads` / `blacklist` |
 | `skiplist` | 跳表有序 KV |
 | `cache` | LRU / LFU 本地缓存 |
 | `id` | 雪花算法 ID |
