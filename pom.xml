@@ -19,6 +19,7 @@
         <module>lind-data-starter</module>
         <module>lind-stream-web</module>
         <module>lind-delay-task-web</module>
+        <module>lind-qps-checker</module>
     </modules>
 
     <properties>

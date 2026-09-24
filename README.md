@@ -13,6 +13,7 @@
 | `lind-data-starter` | Spring Boot Starter：Spring Data Redis/Mongo/ES + HBase 自动配置 |
 | `lind-stream-web` | 流式 Web：`text/event-stream`，类大模型逐段返回 |
 | `lind-delay-task-web` | 延时任务：时间轮 + MySQL 持久化 + 管理页 |
+| `lind-qps-checker` | 控制台压测：单周期评估 REST 并发 / QPS，输出测试报告 |
 
 ```bash
 mvn clean test
@@ -21,6 +22,9 @@ mvn -pl lind-stream-web -am spring-boot:run
 
 mvn -pl lind-delay-task-web -am spring-boot:run
 # 打开 http://localhost:8090/admin/tasks
+
+mvn -pl lind-qps-checker -am package
+java -jar lind-qps-checker/target/lind-qps-checker-1.0.0.jar --url http://localhost:8080/ping --concurrency 50 --duration 30
 ```
 
 ## 算法库一览（`lind-algorithm-framework`）
@@ -45,6 +49,12 @@ mvn -pl lind-delay-task-web -am spring-boot:run
 | `unionfind` | 并查集 |
 | `stringmatch` | KMP / AC 自动机 |
 | `otp` | HOTP / TOTP（滑动窗口校验，默认 6 位） |
+| `hll` | HyperLogLog 基数估计（UV） |
+| `cuckoo` | Cuckoo Filter（可删除的概率集合） |
+| `geo` | Geohash 经纬度编码与邻格 |
+| `similarity` | SimHash 文本指纹与汉明距离 |
+| `codec` | Base62 短链编解码 |
+| `heap` | 二叉堆优先队列 |
 
 ## 数据中间件
 
