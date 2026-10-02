@@ -10,6 +10,8 @@ public class LindDataProperties {
 
 	private final Redis redis = new Redis();
 
+	private final Redisson redisson = new Redisson();
+
 	private final Mongo mongo = new Mongo();
 
 	private final Elasticsearch elasticsearch = new Elasticsearch();
@@ -18,6 +20,10 @@ public class LindDataProperties {
 
 	public Redis getRedis() {
 		return redis;
+	}
+
+	public Redisson getRedisson() {
+		return redisson;
 	}
 
 	public Mongo getMongo() {
@@ -35,6 +41,21 @@ public class LindDataProperties {
 	public static class Redis {
 
 		/** 是否启用 Redis 场景 Bean（需 classpath 有 Spring Data Redis）。 */
+		private boolean enabled = true;
+
+		public boolean isEnabled() {
+			return enabled;
+		}
+
+		public void setEnabled(boolean enabled) {
+			this.enabled = enabled;
+		}
+
+	}
+
+	public static class Redisson {
+
+		/** 是否启用 Redisson 场景 Bean（需 classpath 有 RedissonClient）。 */
 		private boolean enabled = true;
 
 		public boolean isEnabled() {

@@ -1,4 +1,5 @@
 com.lind.data.starter.redis.RedisStarterAutoConfiguration
+com.lind.data.starter.redis.redisson.RedissonStarterAutoConfiguration
 com.lind.data.starter.mongodb.MongoStarterAutoConfiguration
 com.lind.data.starter.elasticsearch.ElasticsearchStarterAutoConfiguration
 com.lind.data.starter.hbase.HBaseStarterAutoConfiguration

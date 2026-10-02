@@ -8,7 +8,7 @@ Spring Boot 3 Starter：在官方 Spring Data Redis / MongoDB / Elasticsearch �
 
 | 包 | 说明文档 |
 |---|---|
-| Redis | [redis/readme.md](src/main/java/com/lind/data/starter/redis/readme.md) |
+| Redis / Redisson | [redis/readme.md](src/main/java/com/lind/data/starter/redis/readme.md)（含 Redisson 锁与延迟队列） |
 | MongoDB | [mongodb/readme.md](src/main/java/com/lind/data/starter/mongodb/readme.md) |
 | Elasticsearch | [elasticsearch/readme.md](src/main/java/com/lind/data/starter/elasticsearch/readme.md) |
 | HBase | [hbase/readme.md](src/main/java/com/lind/data/starter/hbase/readme.md) |
@@ -26,6 +26,11 @@ Spring Boot 3 Starter：在官方 Spring Data Redis / MongoDB / Elasticsearch �
 <dependency>
   <groupId>org.springframework.boot</groupId>
   <artifactId>spring-boot-starter-data-redis</artifactId>
+</dependency>
+<!-- Redisson 分布式锁 / 延迟队列（延时任务） -->
+<dependency>
+  <groupId>org.redisson</groupId>
+  <artifactId>redisson-spring-boot-starter</artifactId>
 </dependency>
 <dependency>
   <groupId>org.springframework.boot</groupId>
@@ -47,6 +52,7 @@ Spring Boot 3 Starter：在官方 Spring Data Redis / MongoDB / Elasticsearch �
 | 开关 | 默认 | Bean |
 |------|------|------|
 | `lind.data.redis.enabled` | `true` | `LindSpringRedis`（需已有 `StringRedisTemplate`） |
+| `lind.data.redisson.enabled` | `true` | `LindRedisson`（需已有 `RedissonClient`） |
 | `lind.data.mongo.enabled` | `true` | `LindSpringMongo`（需已有 `MongoTemplate`） |
 | `lind.data.elasticsearch.enabled` | `true` | `LindSpringElasticsearch`（需已有 `ElasticsearchOperations`） |
 | `lind.data.hbase.enabled` | `false` | `Connection` + `LindHBaseTemplate` |
@@ -63,6 +69,11 @@ redis.lock("order:2", Duration.ofSeconds(30)).tryRun(() -> { /* 固定租约 */ 
 redis.rateLimiter("api:ip", 100, Duration.ofSeconds(1)).tryAcquire();
 redis.delayQueue("jobs").scheduleAfterMillis("payload", 5_000);
 redis.idGenerator("order:seq").nextId();
+
+@Autowired LindRedisson redisson; // redisson-spring-boot-starter
+redisson.tryRun("order:3", () -> { /* Redisson 看门狗锁 */ });
+redisson.delayQueue("delay:tasks").scheduleAfter("close-1", Duration.ofSeconds(30));
+redisson.delayQueue("delay:tasks").startConsumer(msg -> { /* 延时任务 */ });
 
 @Autowired LindSpringMongo mongo;
 mongo.documents().insert(entity);

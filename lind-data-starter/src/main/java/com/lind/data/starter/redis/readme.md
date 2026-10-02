@@ -9,9 +9,10 @@
 | `SpringRedisCache` | String + TTL | 会话 / 热点数据缓存 |
 | `SpringRedisLock` | SET NX PX + Lua 解锁 / 看门狗续期 | 下单、支付等防并发；长任务用看门狗 |
 | `SpringRedisRateLimiter` | ZSET 滑动窗口 | 接口 / IP 限流 |
-| `SpringRedisDelayQueue` | ZSET score=执行时间 | 延时关单、延时通知 |
+| `SpringRedisDelayQueue` | ZSET score=执行时间 | 延时关单、延时通知（需自行 poll） |
 | `SpringRedisIdGenerator` | INCR / INCRBY | 全局订单号、序列 |
- 
+| **Redisson** `LindRedisson` | 见下方 | 官方 Redisson 分布式锁 + 延迟队列（推荐做延时任务） |
+
 ## 启用条件
 
 1. classpath 存在 `StringRedisTemplate`（通常引入 `spring-boot-starter-data-redis`）
@@ -75,6 +76,84 @@ long batch = redis.idGenerator("seq:order").nextId(100);
 ```
 
 也可直接注入后取原生模板：`redis.template()`。
+
+## Redisson：分布式锁 + 延迟队列（延时任务）
+
+子包：`com.lind.data.starter.redis.redisson`。
+
+### 依赖与开关
+
+```xml
+<dependency>
+  <groupId>org.redisson</groupId>
+  <artifactId>redisson-spring-boot-starter</artifactId>
+</dependency>
+```
+
+```yaml
+spring:
+  data:
+    redis:
+      host: 127.0.0.1
+      port: 6379
+lind:
+  data:
+    redisson:
+      enabled: true   # 默认 true；存在 RedissonClient 时装配 LindRedisson
+```
+
+`redisson-spring-boot-starter` 会按 `spring.data.redis.*` 创建 `RedissonClient`，本模块再装配 `LindRedisson`。
+
+### 分布式锁
+
+```java
+@Autowired LindRedisson redisson;
+
+// 看门狗锁 + 自动 unlock（推荐）
+redisson.tryRun("order:pay:1001", () -> {
+    // 业务
+});
+redisson.run("order:pay:1001", () -> { /* 拿不到锁抛异常 */ });
+
+// 固定租约 30s，不续期
+redisson.lock("order:pay:1002", Duration.ofSeconds(30)).tryRun(() -> { /* ... */ });
+
+// 等待最多 3s 拿锁
+RedissonDistributedLock lock = redisson.lock("order:pay:1003");
+if (lock.tryLock(Duration.ofSeconds(3))) {
+    try { /* ... */ } finally { lock.unlock(); }
+}
+```
+
+### 延迟队列（延时任务）
+
+生产端投递、消费端阻塞取到期消息：
+
+```java
+@Autowired LindRedisson redisson;
+
+RedissonDelayTaskQueue queue = redisson.delayQueue("delay:tasks");
+
+// 生产：30 秒后关单
+queue.scheduleAfter("close-order-1001", Duration.ofSeconds(30));
+queue.scheduleAt("notify-1001", Instant.now().plus(Duration.ofMinutes(10)));
+
+// 消费方式 1：阻塞 take（工作线程里循环）
+String task = queue.take();
+
+// 消费方式 2：短超时 poll
+Optional<String> due = queue.poll(Duration.ofSeconds(1));
+
+// 消费方式 3：守护线程持续消费
+queue.startConsumer(msg -> {
+    // 执行延时任务业务；建议内部再加幂等 / 分布式锁
+});
+
+// 进程退出前
+queue.close(); // destroy 内部 DelayedQueue
+```
+
+与 `SpringRedisDelayQueue`（ZSET + 主动 pollDue）的区别：Redisson 延迟队列到期后会进入阻塞队列，可用 `take()` **推拉结合**，更适合常驻消费者做延时任务。
 
 ## 注意
 
