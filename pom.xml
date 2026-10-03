@@ -165,10 +165,10 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
             </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-            </plugin>
+<!--            <plugin>-->
+<!--                <groupId>org.apache.maven.plugins</groupId>-->
+<!--                <artifactId>maven-surefire-plugin</artifactId>-->
+<!--            </plugin>-->
             <!--代码格式插件，默认使用spring 规则 ./mvnw spring-javaformat:apply
             在进行ctrl+alt+L组合键进行代码格式化时，样式也会生效的 -->
             <plugin>

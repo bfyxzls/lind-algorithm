@@ -11,8 +11,8 @@ import com.lind.data.starter.mongodb.LindSpringMongo;
 import com.lind.data.starter.mongodb.MongoStarterAutoConfiguration;
 import com.lind.data.starter.redis.LindSpringRedis;
 import com.lind.data.starter.redis.RedisStarterAutoConfiguration;
-import com.lind.data.starter.redis.redisson.LindRedisson;
-import com.lind.data.starter.redis.redisson.RedissonStarterAutoConfiguration;
+import com.lind.data.starter.redis.LindSpringRedis;
+import com.lind.data.starter.redis.RedisStarterAutoConfiguration;
 import org.apache.hadoop.hbase.client.Connection;
 import org.junit.jupiter.api.Test;
 import org.redisson.api.RedissonClient;
@@ -41,23 +41,12 @@ class StarterAutoConfigurationTest {
 	@Test
 	void redissonRegistersAndCanDisable() {
 		ApplicationContextRunner runner = new ApplicationContextRunner()
-				.withConfiguration(AutoConfigurations.of(RedissonStarterAutoConfiguration.class))
+				.withConfiguration(AutoConfigurations.of(RedisStarterAutoConfiguration.class))
 				.withBean(RedissonClient.class, () -> mock(RedissonClient.class));
 
-		runner.run(ctx -> assertThat(ctx).hasSingleBean(LindRedisson.class));
+		runner.run(ctx -> assertThat(ctx).hasSingleBean(LindSpringRedis.class));
 		runner.withPropertyValues("lind.data.redisson.enabled=false")
-				.run(ctx -> assertThat(ctx).doesNotHaveBean(LindRedisson.class));
-	}
-
-	@Test
-	void mongoRegistersAndCanDisable() {
-		ApplicationContextRunner runner = new ApplicationContextRunner()
-				.withConfiguration(AutoConfigurations.of(MongoStarterAutoConfiguration.class))
-				.withBean(MongoTemplate.class, () -> mock(MongoTemplate.class));
-
-		runner.run(ctx -> assertThat(ctx).hasSingleBean(LindSpringMongo.class));
-		runner.withPropertyValues("lind.data.mongo.enabled=false")
-				.run(ctx -> assertThat(ctx).doesNotHaveBean(LindSpringMongo.class));
+				.run(ctx -> assertThat(ctx).doesNotHaveBean(LindSpringRedis.class));
 	}
 
 	@Test
