@@ -55,6 +55,7 @@ java -jar lind-qps-checker/target/lind-qps-checker-1.0.0.jar --url http://localh
 | `similarity` | SimHash 文本指纹与汉明距离 |
 | `codec` | Base62 短链编解码 |
 | `heap` | 二叉堆优先队列 |
+| `sanitize` | 文本清洗（HTML / 电话 / 邮箱 / UA / 身份证 / 银行卡等） |
 
 ## 数据中间件
 
