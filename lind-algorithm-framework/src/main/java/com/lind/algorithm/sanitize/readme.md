@@ -41,4 +41,11 @@ TextSanitizer pipeline = new CompositeTextSanitizer(
 
 ## User-Agent 清洗规则
 
-默认去掉（大小写不敏感）：`mozilla`、`applewebkit`、`webkit`、`chrome`、`chromium`、`safari`、`firefox`、`gecko`、`khtml`、`version`、`mobile`、`crios`、`edg`、`edge`、`edga`、`edgios`、`opr`、`opera`、`electron`、`msie`、`trident`、`dalvik`，以及纯版本号片段；保留如 `MyApp/1.0`、`BizChannel/xxx` 等业务标识。
+识别 `Name/version` 与无斜杠的裸名，过滤浏览器 / 系统噪声后保留业务名：
+
+```text
+... Qoder/0.4.4 Chrome/... Electron/... Safari/...  →  Qoder
+... Qoder Chrome/... Electron/... Safari/...       →  Qoder   （无 /version 同样提取）
+```
+
+噪声包括浏览器引擎（`mozilla`、`chrome`、`electron`、`safari`…）以及系统片段（`windows`、`nt`、`win64`、`x64`、`like`、`linux`、`android`…）。纯浏览器 UA 得到空串；`new UserAgentSanitizer(true)` 对带版本的产品保留 `Qoder/0.4.4`。

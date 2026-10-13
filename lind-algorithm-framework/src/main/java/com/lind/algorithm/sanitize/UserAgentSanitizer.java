@@ -6,39 +6,58 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * User-Agent 清洗：去掉浏览器通用片段，保留业务自定义 UA。
+ * User-Agent 清洗：提取业务客户端名。
+ * <ul>
+ * <li>{@code Qoder/0.4.4} → {@code Qoder}</li>
+ * <li>无斜杠的裸名 {@code Qoder} 同样保留</li>
+ * <li>去掉浏览器 / 引擎 / Electron，以及 Windows、Win64、like 等系统噪声</li>
+ * </ul>
  */
 public final class UserAgentSanitizer extends TextSanitizer {
 
-	private static final Set<String> DEFAULT_BROWSER_TOKENS = Set.of("mozilla", "applewebkit", "webkit", "chrome",
-			"chromium", "safari", "firefox", "gecko", "khtml", "version", "mobile", "crios", "edg", "edge", "edga",
-			"edgios", "opr", "opera", "electron", "msie", "trident", "dalvik");
-
-	private static final Pattern SPLIT = Pattern.compile("[\\s;/()\\[\\]{},]+");
+	/**
+	 * 产品或裸名：{@code Name} 或 {@code Name/version}。
+	 */
+	private static final Pattern TOKEN = Pattern.compile("([A-Za-z][A-Za-z0-9._+-]*)(?:/([^\\s/;()\\[\\]{}]+))?");
 
 	private static final Pattern VERSION_LIKE = Pattern.compile("(?i)^[vV]?\\d+(?:\\.\\d+)*$");
 
-	private final Set<String> browserTokens;
+	private static final Set<String> DEFAULT_NOISE_PRODUCTS = Set.of(
+			// 浏览器 / 引擎
+			"mozilla", "applewebkit", "webkit", "chrome", "chromium", "safari", "firefox", "gecko", "khtml", "version",
+			"mobile", "crios", "edg", "edge", "edga", "edgios", "opr", "opera", "electron", "msie", "trident", "dalvik",
+			// 系统 / 平台噪声（括号内常见）
+			"windows", "nt", "win64", "win32", "x64", "x86", "x86_64", "amd64", "arm", "arm64", "aarch64", "linux",
+			"android", "ios", "iphone", "ipad", "mac", "macintosh", "os", "osx", "like", "compatible", "rv", "u",
+			"wow64");
 
-	private final boolean dropVersionTokens;
+	private final Set<String> noiseProducts;
+
+	/** true 时对 Name/version 保留版本号；裸名始终只输出 Name。 */
+	private final boolean keepVersion;
 
 	public UserAgentSanitizer() {
-		this(DEFAULT_BROWSER_TOKENS, true);
+		this(DEFAULT_NOISE_PRODUCTS, false);
 	}
 
-	public UserAgentSanitizer(Set<String> browserTokens, boolean dropVersionTokens) {
-		Objects.requireNonNull(browserTokens, "browserTokens");
+	public UserAgentSanitizer(boolean keepVersion) {
+		this(DEFAULT_NOISE_PRODUCTS, keepVersion);
+	}
+
+	public UserAgentSanitizer(Set<String> noiseProducts, boolean keepVersion) {
+		Objects.requireNonNull(noiseProducts, "noiseProducts");
 		Set<String> normalized = new LinkedHashSet<>();
-		for (String token : browserTokens) {
+		for (String token : noiseProducts) {
 			if (token != null && !token.isBlank()) {
 				normalized.add(token.toLowerCase(Locale.ROOT));
 			}
 		}
-		this.browserTokens = Set.copyOf(normalized);
-		this.dropVersionTokens = dropVersionTokens;
+		this.noiseProducts = Set.copyOf(normalized);
+		this.keepVersion = keepVersion;
 	}
 
 	@Override
@@ -48,46 +67,46 @@ public final class UserAgentSanitizer extends TextSanitizer {
 
 	@Override
 	protected String doSanitize(String input) {
-		String[] parts = SPLIT.split(input.trim());
-		List<String> kept = new ArrayList<>();
-		for (String part : parts) {
-			if (part == null || part.isBlank()) {
+		List<String> business = new ArrayList<>();
+		Set<String> seen = new LinkedHashSet<>();
+		Matcher matcher = TOKEN.matcher(input);
+		while (matcher.find()) {
+			String name = matcher.group(1);
+			String version = matcher.group(2);
+			if (name == null || name.isEmpty() || isNoiseProduct(name)) {
 				continue;
 			}
-			String lower = part.toLowerCase(Locale.ROOT);
-			if (isBrowserToken(lower)) {
+			if (VERSION_LIKE.matcher(name).matches()) {
 				continue;
 			}
-			if (dropVersionTokens && VERSION_LIKE.matcher(part).matches()) {
+			String key = name.toLowerCase(Locale.ROOT);
+			if (!seen.add(key)) {
 				continue;
 			}
-			kept.add(part);
+			if (version != null && keepVersion) {
+				business.add(name + "/" + version);
+			}
+			else {
+				business.add(name);
+			}
 		}
-		return String.join(" ", kept).trim();
+		return String.join(" ", business);
 	}
 
-	private boolean isBrowserToken(String lower) {
-		if (browserTokens.contains(lower)) {
-			return true;
-		}
-		// chrome/120.0.0.0 → chrome
-		int slash = lower.indexOf('/');
-		if (slash > 0) {
-			String name = lower.substring(0, slash);
-			if (browserTokens.contains(name)) {
-				return true;
-			}
-		}
-		for (String token : browserTokens) {
-			if (lower.startsWith(token)) {
-				return true;
-			}
-		}
-		return false;
+	private boolean isNoiseProduct(String product) {
+		return noiseProducts.contains(product.toLowerCase(Locale.ROOT));
 	}
 
+	public static Set<String> defaultNoiseProducts() {
+		return DEFAULT_NOISE_PRODUCTS;
+	}
+
+	/**
+	 * @deprecated 使用 {@link #defaultNoiseProducts()}
+	 */
+	@Deprecated
 	public static Set<String> defaultBrowserTokens() {
-		return DEFAULT_BROWSER_TOKENS;
+		return DEFAULT_NOISE_PRODUCTS;
 	}
 
 }

@@ -52,16 +52,36 @@ public class TextSanitizerTest {
 	}
 
 	@Test
-	void userAgentKeepsBusinessTokens() {
-		String ua = "Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 (KHTML, like Gecko) "
-				+ "Chrome/120.0.0.0 Mobile Safari/537.36 MyApp/3.2.1 BizChannel/huawei";
-		String clean = TextSanitizers.userAgent().sanitize(ua);
-		assertTrue(clean.contains("MyApp"));
-		assertTrue(clean.contains("BizChannel"));
-		assertFalse(clean.toLowerCase().contains("mozilla"));
-		assertFalse(clean.toLowerCase().contains("chrome"));
-		assertFalse(clean.toLowerCase().contains("safari"));
-		assertFalse(clean.toLowerCase().contains("webkit"));
+	void userAgentExtractsBareQoderWithoutSlash() {
+		String ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)  "
+				+ "Qoder Chrome/150.0.7871.114 Electron/43.1.1 Safari/537.36";
+		assertEquals("Qoder", TextSanitizers.userAgent().sanitize(ua));
+	}
+
+	@Test
+	void userAgentExtractsQoderWithVersion() {
+		String ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
+				+ "Qoder/0.4.4 Chrome/150.0.7871.114 Electron/43.1.1 Safari/537.36";
+		assertEquals("Qoder", TextSanitizers.userAgent().sanitize(ua));
+		assertEquals("Qoder/0.4.4", new UserAgentSanitizer(true).sanitize(ua));
+	}
+
+	@Test
+	void userAgentKeepsMultipleBusinessProducts() {
+		String ua = "Mozilla/5.0 AppleWebKit/537.36 MyApp/3.2.1 Chrome/120 BizChannel/huawei Safari/537.36";
+		assertEquals("MyApp BizChannel", TextSanitizers.userAgent().sanitize(ua));
+	}
+
+	@Test
+	void userAgentPureBrowserYieldsEmpty() {
+		String ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36";
+		assertEquals("", TextSanitizers.userAgent().sanitize(ua));
+	}
+
+	@Test
+	void userAgentSimpleClientName() {
+		assertEquals("curl", TextSanitizers.userAgent().sanitize("curl/7.68.0"));
+		assertEquals("PostmanRuntime", TextSanitizers.userAgent().sanitize("PostmanRuntime/7.29.0"));
 	}
 
 	@Test
