@@ -2,15 +2,14 @@ package com.lind.algorithm.wheel;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Delayed;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 
 /**
- * 时间轮单个槽：环形双向链表 + 槽到期时间（供 {@link java.util.concurrent.DelayQueue} 推进）。
+ * 时间轮单个槽：环形双向链表 + 槽到期时间。 真正入 {@link java.util.concurrent.DelayQueue} 的是不可变
+ * {@link BucketDeadline}，避免可变 delay 破坏堆序。
  */
-final class TimerTaskList implements Delayed {
+final class TimerTaskList {
 
 	private final TimerTaskEntry root = new TimerTaskEntry(null, null, -1);
 
@@ -88,19 +87,6 @@ final class TimerTaskList implements Delayed {
 		for (TimerTaskEntry entry : entries) {
 			consumer.accept(entry);
 		}
-	}
-
-	@Override
-	public long getDelay(TimeUnit unit) {
-		return Math.max(0, unit.convert(expiration.get() - System.currentTimeMillis(), TimeUnit.MILLISECONDS));
-	}
-
-	@Override
-	public int compareTo(Delayed other) {
-		if (other instanceof TimerTaskList) {
-			return Long.compare(expiration.get(), ((TimerTaskList) other).expiration.get());
-		}
-		return 0;
 	}
 
 }

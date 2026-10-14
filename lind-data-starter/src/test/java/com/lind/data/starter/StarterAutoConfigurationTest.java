@@ -7,19 +7,16 @@ import com.lind.data.starter.elasticsearch.ElasticsearchStarterAutoConfiguration
 import com.lind.data.starter.elasticsearch.LindSpringElasticsearch;
 import com.lind.data.starter.hbase.HBaseStarterAutoConfiguration;
 import com.lind.data.starter.hbase.LindHBaseTemplate;
-import com.lind.data.starter.mongodb.LindSpringMongo;
-import com.lind.data.starter.mongodb.MongoStarterAutoConfiguration;
 import com.lind.data.starter.redis.LindSpringRedis;
 import com.lind.data.starter.redis.RedisStarterAutoConfiguration;
-import com.lind.data.starter.redis.LindSpringRedis;
-import com.lind.data.starter.redis.RedisStarterAutoConfiguration;
+import com.lind.data.starter.redis.redisson.LindRedisson;
+import com.lind.data.starter.redis.redisson.RedissonStarterAutoConfiguration;
 import org.apache.hadoop.hbase.client.Connection;
 import org.junit.jupiter.api.Test;
 import org.redisson.api.RedissonClient;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
-import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
 /**
@@ -41,12 +38,12 @@ class StarterAutoConfigurationTest {
 	@Test
 	void redissonRegistersAndCanDisable() {
 		ApplicationContextRunner runner = new ApplicationContextRunner()
-				.withConfiguration(AutoConfigurations.of(RedisStarterAutoConfiguration.class))
+				.withConfiguration(AutoConfigurations.of(RedissonStarterAutoConfiguration.class))
 				.withBean(RedissonClient.class, () -> mock(RedissonClient.class));
 
-		runner.run(ctx -> assertThat(ctx).hasSingleBean(LindSpringRedis.class));
+		runner.run(ctx -> assertThat(ctx).hasSingleBean(LindRedisson.class));
 		runner.withPropertyValues("lind.data.redisson.enabled=false")
-				.run(ctx -> assertThat(ctx).doesNotHaveBean(LindSpringRedis.class));
+				.run(ctx -> assertThat(ctx).doesNotHaveBean(LindRedisson.class));
 	}
 
 	@Test

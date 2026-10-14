@@ -122,14 +122,21 @@ class RedisScenarioTest {
 		assertThat(lock.tryLock()).isTrue();
 		assertThat(lock.isLocked()).isTrue();
 
-		Thread.sleep(120);
-		verify(template, org.mockito.Mockito.atLeastOnce()).execute(any(RedisScript.class), anyList(), anyString(),
-				anyString());
+		awaitCondition(() -> {
+			try {
+				verify(template, org.mockito.Mockito.atLeastOnce()).execute(any(RedisScript.class), anyList(),
+						anyString(), anyString());
+				return true;
+			}
+			catch (AssertionError e) {
+				return false;
+			}
+		}, 1000);
 
 		assertThat(lock.unlock()).isTrue();
 		assertThat(lock.isLocked()).isFalse();
 		org.mockito.Mockito.clearInvocations(template);
-		Thread.sleep(80);
+		Thread.sleep(120);
 		verify(template, never()).execute(any(RedisScript.class), anyList(), anyString(), anyString());
 	}
 
@@ -141,8 +148,7 @@ class RedisScenarioTest {
 		SpringRedisLock lock = new SpringRedisLock(template, "lock:lost", Duration.ofSeconds(3), true,
 				Duration.ofMillis(30));
 		assertThat(lock.tryLock()).isTrue();
-		Thread.sleep(100);
-		assertThat(lock.isLocked()).isFalse();
+		awaitCondition(() -> !lock.isLocked(), 1000);
 	}
 
 	@Test
@@ -182,16 +188,17 @@ class RedisScenarioTest {
 	@Test
 	void watchdogReleasesWhenOwnerThreadDies() throws Exception {
 		when(valueOps.setIfAbsent(eq("lock:dead"), anyString(), any(Duration.class))).thenReturn(true);
-		when(template.execute(any(RedisScript.class), anyList(), anyString())).thenReturn(1L);
+		when(template.execute(any(RedisScript.class), anyList(), any())).thenReturn(1L);
 
 		SpringRedisLock lock = new SpringRedisLock(template, "lock:dead", Duration.ofSeconds(3), true,
 				Duration.ofMillis(30));
-		Thread owner = new Thread(() -> assertThat(lock.tryLock()).isTrue());
+		AtomicBoolean acquired = new AtomicBoolean(false);
+		Thread owner = new Thread(() -> acquired.set(lock.tryLock()));
 		owner.start();
 		owner.join();
-		Thread.sleep(100);
-		assertThat(lock.isLocked()).isFalse();
-		verify(template, org.mockito.Mockito.atLeastOnce()).execute(any(RedisScript.class), anyList(), anyString());
+		assertThat(acquired).isTrue();
+		awaitCondition(() -> !lock.isLocked(), 1000);
+		verify(template, org.mockito.Mockito.atLeastOnce()).execute(any(RedisScript.class), anyList(), any());
 	}
 
 	@Test
@@ -266,6 +273,18 @@ class RedisScenarioTest {
 	void idGeneratorRejectsNonPositiveStep() {
 		SpringRedisIdGenerator ids = new SpringRedisIdGenerator(template, "seq:order");
 		assertThatThrownBy(() -> ids.nextId(0)).isInstanceOf(IllegalArgumentException.class);
+	}
+
+	private static void awaitCondition(java.util.function.BooleanSupplier condition, long timeoutMs)
+			throws InterruptedException {
+		long deadline = System.currentTimeMillis() + timeoutMs;
+		while (System.currentTimeMillis() < deadline) {
+			if (condition.getAsBoolean()) {
+				return;
+			}
+			Thread.sleep(10);
+		}
+		assertThat(condition.getAsBoolean()).as("condition not met within %dms", timeoutMs).isTrue();
 	}
 
 }

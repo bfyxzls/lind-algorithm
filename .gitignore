@@ -31,5 +31,5 @@ Thumbs.db
 *.tmp
 *.bak
 
-# Local H2 delay-task DB
-data/
+# Local H2 delay-task DB（锚定仓库根目录，避免误忽略 **/data/** 源码路径）
+/data/

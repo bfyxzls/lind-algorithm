@@ -14,6 +14,7 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
@@ -271,18 +272,7 @@ public class SpringRedisLock implements AutoCloseable {
 		long periodMs = renewInterval.toMillis();
 		ScheduledFuture<?> future = WATCHDOG_EXECUTOR.scheduleAtFixedRate(() -> {
 			try {
-				if (!locked.get()) {
-					return;
-				}
-				Thread owner = ownerThread.get();
-				// 持有线程已结束（非线程池复用场景）：自动停续期并释放
-				if (owner != null && !owner.isAlive()) {
-					releaseAction.release();
-					return;
-				}
-				if (!renewOnce()) {
-					releaseAction.release();
-				}
+				releaseAction.watchdogTick(this::renewOnce);
 			}
 			catch (Exception ignored) {
 				// 续期失败不抛到调度线程
@@ -343,7 +333,33 @@ public class SpringRedisLock implements AutoCloseable {
 			release();
 		}
 
+		/**
+		 * 看门狗 tick：与 {@link #release()} 互斥，避免 unlock 后仍续期。
+		 */
+		void watchdogTick(BooleanSupplier renew) {
+			synchronized (this) {
+				if (!locked.get()) {
+					return;
+				}
+				Thread owner = ownerThread.get();
+				// 持有线程已结束（非线程池复用场景）：自动停续期并释放
+				if (owner != null && !owner.isAlive()) {
+					releaseUnderLock();
+					return;
+				}
+				if (!renew.getAsBoolean()) {
+					releaseUnderLock();
+				}
+			}
+		}
+
 		boolean release() {
+			synchronized (this) {
+				return releaseUnderLock();
+			}
+		}
+
+		private boolean releaseUnderLock() {
 			stopWatchdogOnly();
 			ownerThread.set(null);
 			locked.set(false);
@@ -356,8 +372,10 @@ public class SpringRedisLock implements AutoCloseable {
 		}
 
 		void resetForRelock() {
-			released.set(false);
-			lastUnlockOk = false;
+			synchronized (this) {
+				released.set(false);
+				lastUnlockOk = false;
+			}
 		}
 
 		void stopWatchdogOnly() {

@@ -4,6 +4,7 @@ import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -38,9 +39,10 @@ public final class LoadConfig {
 	private LoadConfig(Builder builder) {
 		this.url = Objects.requireNonNull(builder.url, "url");
 		this.method = builder.method == null ? "GET" : builder.method.toUpperCase();
-		this.headers = Map.copyOf(builder.headers);
-		this.queryParams = Map.copyOf(builder.queryParams);
-		this.formParams = Map.copyOf(builder.formParams);
+		// Map.copyOf 在 JDK 17 不保证保留 LinkedHashMap 插入序，form/query 编码依赖顺序
+		this.headers = copyOrdered(builder.headers);
+		this.queryParams = copyOrdered(builder.queryParams);
+		this.formParams = copyOrdered(builder.formParams);
 		this.body = builder.body;
 		this.concurrency = builder.concurrency;
 		this.duration = builder.duration;
@@ -162,6 +164,10 @@ public final class LoadConfig {
 			sb.append(URLEncoder.encode(entry.getValue(), StandardCharsets.UTF_8));
 		}
 		return sb.toString();
+	}
+
+	private static Map<String, String> copyOrdered(Map<String, String> source) {
+		return Collections.unmodifiableMap(new LinkedHashMap<>(source));
 	}
 
 	public static final class Builder {

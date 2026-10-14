@@ -43,7 +43,7 @@ public final class HashedWheelTimer implements AutoCloseable {
 
 	private static final long DEFAULT_POLL_MS = 200L;
 
-	private final DelayQueue<TimerTaskList> delayQueue = new DelayQueue<>();
+	private final DelayQueue<BucketDeadline> delayQueue = new DelayQueue<>();
 
 	private final TimingWheel timingWheel;
 
@@ -197,15 +197,14 @@ public final class HashedWheelTimer implements AutoCloseable {
 	private void runLoop() {
 		while (!shutdown.get()) {
 			try {
-				TimerTaskList bucket = delayQueue.poll(pollTimeoutMs, TimeUnit.MILLISECONDS);
-				if (bucket != null) {
+				BucketDeadline deadline = delayQueue.poll(pollTimeoutMs, TimeUnit.MILLISECONDS);
+				if (deadline != null) {
 					synchronized (this) {
-						timingWheel.advanceClock(bucket.getExpiration());
-						do {
-							bucket.flush(this::addEntry);
-							bucket = delayQueue.poll();
+						processDeadline(deadline);
+						BucketDeadline next;
+						while ((next = delayQueue.poll()) != null) {
+							processDeadline(next);
 						}
-						while (bucket != null);
 					}
 				}
 			}
@@ -216,6 +215,14 @@ public final class HashedWheelTimer implements AutoCloseable {
 				// 非关闭场景的中断不恢复中断标志，避免后续 poll 立刻失败导致空转
 			}
 		}
+	}
+
+	private void processDeadline(BucketDeadline deadline) {
+		if (deadline.isStale()) {
+			return;
+		}
+		timingWheel.advanceClock(deadline.expirationMs());
+		deadline.bucket().flush(this::addEntry);
 	}
 
 	private void addEntry(TimerTaskEntry entry) {

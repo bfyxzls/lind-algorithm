@@ -18,11 +18,11 @@ final class TimingWheel {
 
 	private final TimerTaskList[] buckets;
 
-	private final DelayQueue<TimerTaskList> delayQueue;
+	private final DelayQueue<BucketDeadline> delayQueue;
 
 	private volatile TimingWheel overflowWheel;
 
-	TimingWheel(long tickMs, int wheelSize, long startMs, DelayQueue<TimerTaskList> delayQueue) {
+	TimingWheel(long tickMs, int wheelSize, long startMs, DelayQueue<BucketDeadline> delayQueue) {
 		this.tickMs = tickMs;
 		this.wheelSize = wheelSize;
 		this.interval = tickMs * wheelSize;
@@ -50,8 +50,9 @@ final class TimingWheel {
 			int index = (int) (virtualId % wheelSize);
 			TimerTaskList bucket = buckets[index];
 			bucket.add(entry);
-			if (bucket.setExpiration(virtualId * tickMs)) {
-				delayQueue.offer(bucket);
+			long bucketExpiration = virtualId * tickMs;
+			if (bucket.setExpiration(bucketExpiration)) {
+				delayQueue.offer(new BucketDeadline(bucket, bucketExpiration));
 			}
 			return true;
 		}
