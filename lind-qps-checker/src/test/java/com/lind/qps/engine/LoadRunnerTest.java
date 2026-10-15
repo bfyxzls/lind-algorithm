@@ -1,4 +1,4 @@
-package com.lind.qps;
+package com.lind.qps.engine;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -41,6 +41,22 @@ public class LoadRunnerTest {
 		assertEquals(10, report.p95LatencyMillis());
 		assertEquals(10, report.p99LatencyMillis());
 		assertTrue(report.format().contains("成功率"));
+	}
+
+	@Test
+	void runCollectsFailureStatusAndBody() {
+		LoadConfig config = LoadConfig.builder().url("http://localhost/unused").concurrency(2)
+				.duration(Duration.ofMillis(150)).requestTimeout(Duration.ofSeconds(1)).build();
+		LoadRunner runner = new LoadRunner(config,
+				() -> RequestResult.fail(500, 3_000_000L, "unexpected status 500", "{\"error\":\"boom\"}"));
+		LoadReport report = runner.run();
+		assertTrue(report.failureCount() > 0);
+		assertTrue(report.failureSamples().size() > 0);
+		FailureSample sample = report.failureSamples().get(0);
+		assertEquals(500, sample.statusCode());
+		assertEquals("{\"error\":\"boom\"}", sample.responseBody());
+		assertTrue(report.format().contains("失败样本"));
+		assertTrue(report.format().contains("status=500"));
 	}
 
 }

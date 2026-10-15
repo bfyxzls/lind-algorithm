@@ -1,0 +1,34 @@
+server:
+  port: 8091
+
+spring:
+  application:
+    name: lind-qps-checker
+  datasource:
+    # H2 文件库放在模块 resources/h2 下（workingDirectory=模块根目录）
+    url: jdbc:h2:file:./src/main/resources/h2/qps;MODE=MySQL;AUTO_SERVER=TRUE;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema-qps.sql
+      continue-on-error: true
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+      settings:
+        web-allow-others: false
+  freemarker:
+    cache: false
+    suffix: .ftl
+    content-type: text/html
+    charset: UTF-8
+    settings:
+      number_format: computer
+
+logging:
+  level:
+    com.lind.qps: INFO

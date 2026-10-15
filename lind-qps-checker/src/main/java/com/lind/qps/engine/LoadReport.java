@@ -1,6 +1,7 @@
-package com.lind.qps;
+package com.lind.qps.engine;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
@@ -33,9 +34,18 @@ public final class LoadReport {
 
 	private final double qps;
 
+	private final List<FailureSample> failureSamples;
+
 	public LoadReport(String target, int concurrency, long durationMillis, long totalRequests, long successCount,
 			long failureCount, long minLatencyMillis, long avgLatencyMillis, long maxLatencyMillis,
 			long p95LatencyMillis, long p99LatencyMillis, double qps) {
+		this(target, concurrency, durationMillis, totalRequests, successCount, failureCount, minLatencyMillis,
+				avgLatencyMillis, maxLatencyMillis, p95LatencyMillis, p99LatencyMillis, qps, List.of());
+	}
+
+	public LoadReport(String target, int concurrency, long durationMillis, long totalRequests, long successCount,
+			long failureCount, long minLatencyMillis, long avgLatencyMillis, long maxLatencyMillis,
+			long p95LatencyMillis, long p99LatencyMillis, double qps, List<FailureSample> failureSamples) {
 		this.target = Objects.requireNonNull(target, "target");
 		this.concurrency = concurrency;
 		this.durationMillis = durationMillis;
@@ -48,10 +58,17 @@ public final class LoadReport {
 		this.p95LatencyMillis = p95LatencyMillis;
 		this.p99LatencyMillis = p99LatencyMillis;
 		this.qps = qps;
+		this.failureSamples = List.copyOf(failureSamples == null ? List.of() : failureSamples);
 	}
 
 	public static LoadReport fromLatencies(String target, int concurrency, long durationMillis, long successCount,
 			long failureCount, long[] latencyMillisSorted) {
+		return fromLatencies(target, concurrency, durationMillis, successCount, failureCount, latencyMillisSorted,
+				List.of());
+	}
+
+	public static LoadReport fromLatencies(String target, int concurrency, long durationMillis, long successCount,
+			long failureCount, long[] latencyMillisSorted, List<FailureSample> failureSamples) {
 		long total = successCount + failureCount;
 		long min = 0;
 		long max = 0;
@@ -72,7 +89,7 @@ public final class LoadReport {
 		double seconds = Math.max(durationMillis / 1000.0, 0.001);
 		double qps = total / seconds;
 		return new LoadReport(target, concurrency, durationMillis, total, successCount, failureCount, min, avg, max,
-				p95, p99, qps);
+				p95, p99, qps, failureSamples);
 	}
 
 	private static long percentile(long[] sorted, double p) {
@@ -139,12 +156,20 @@ public final class LoadReport {
 		return qps;
 	}
 
+	/**
+	 * 失败样本（含 HTTP 状态码与响应体），数量有上限。
+	 */
+	public List<FailureSample> failureSamples() {
+		return failureSamples;
+	}
+
 	public boolean meetsSla(double minSuccessRatePercent, long maxAllowedLatencyMillis) {
 		return successRate() >= minSuccessRatePercent && maxLatencyMillis <= maxAllowedLatencyMillis;
 	}
 
 	public String format() {
-		return """
+		StringBuilder sb = new StringBuilder();
+		sb.append("""
 				========== QPS Checker 测试报告 ==========
 				目标地址        : %s
 				测试并发数      : %d
@@ -159,10 +184,22 @@ public final class LoadReport {
 				最大响应时间    : %d ms
 				P95 响应时间    : %d ms
 				P99 响应时间    : %d ms
-				==========================================
 				""".formatted(target, concurrency, durationMillis, totalRequests, successCount, failureCount,
 				String.format(Locale.ROOT, "%.2f", successRate()), String.format(Locale.ROOT, "%.2f", qps),
-				minLatencyMillis, avgLatencyMillis, maxLatencyMillis, p95LatencyMillis, p99LatencyMillis);
+				minLatencyMillis, avgLatencyMillis, maxLatencyMillis, p95LatencyMillis, p99LatencyMillis));
+		if (!failureSamples.isEmpty()) {
+			sb.append("---------- 失败样本（最多 ").append(failureSamples.size()).append(" 条） ----------\n");
+			int i = 1;
+			for (FailureSample sample : failureSamples) {
+				sb.append(String.format(Locale.ROOT, "#%d status=%d latency=%d ms error=%s%n  body=%s%n", i++,
+						sample.statusCode(), sample.latencyMillis(),
+						sample.errorMessage() == null || sample.errorMessage().isEmpty() ? "-" : sample.errorMessage(),
+						sample.responseBody() == null || sample.responseBody().isEmpty() ? "-"
+								: sample.responseBody().replace('\n', ' ')));
+			}
+		}
+		sb.append("==========================================\n");
+		return sb.toString();
 	}
 
 	@Override

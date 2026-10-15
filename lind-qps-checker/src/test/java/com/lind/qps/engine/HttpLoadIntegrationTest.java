@@ -1,4 +1,4 @@
-package com.lind.qps;
+package com.lind.qps.engine;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -99,11 +99,24 @@ public class HttpLoadIntegrationTest {
 	}
 
 	@Test
-	void mainPostMode() {
-		int code = QpsCheckerMain.run(new String[] { "--url", baseUrl, "--method", "POST", "--header", "X-Test:1",
-				"--param", "q=1", "--body", "{}", "--concurrency", "2", "--duration", "1" });
-		assertEquals(0, code);
-		assertEquals("POST", lastMethod.get());
+	void recordsStatusAndBodyWhenHttpFails() throws IOException {
+		server.createContext("/fail", exchange -> {
+			byte[] body = "{\"msg\":\"denied\"}".getBytes(StandardCharsets.UTF_8);
+			exchange.getResponseHeaders().add("Content-Type", "application/json");
+			exchange.sendResponseHeaders(503, body.length);
+			try (OutputStream os = exchange.getResponseBody()) {
+				os.write(body);
+			}
+		});
+		String failUrl = "http://127.0.0.1:" + server.getAddress().getPort() + "/fail";
+		LoadConfig config = LoadConfig.builder().url(failUrl).concurrency(1).duration(Duration.ofMillis(200))
+				.requestTimeout(Duration.ofSeconds(2)).build();
+		LoadReport report = new LoadRunner(config).run();
+		assertTrue(report.failureCount() > 0);
+		assertTrue(report.failureSamples().size() > 0);
+		FailureSample sample = report.failureSamples().get(0);
+		assertEquals(503, sample.statusCode());
+		assertTrue(sample.responseBody().contains("denied"));
 	}
 
 }

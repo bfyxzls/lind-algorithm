@@ -1,6 +1,6 @@
 # lind-data-starter
 
-Spring Boot 3 Starter：在官方 Spring Data Redis / MongoDB / Elasticsearch 与 Apache HBase Client 之上提供场景封装与自动配置。
+Spring Boot 3 Starter：在官方 Spring Data Redis / MongoDB / Elasticsearch、Apache HBase Client 与 Apache Doris 之上提供场景封装与自动配置。
 
 与 [`lind-data-frameless`](../lind-data-frameless/README.md)（无 Spring、直连客户端）互补：Boot 应用优先本模块。
 
@@ -12,6 +12,7 @@ Spring Boot 3 Starter：在官方 Spring Data Redis / MongoDB / Elasticsearch �
 | MongoDB | [mongodb/readme.md](src/main/java/com/lind/data/starter/mongodb/readme.md) |
 | Elasticsearch | [elasticsearch/readme.md](src/main/java/com/lind/data/starter/elasticsearch/readme.md) |
 | HBase | [hbase/readme.md](src/main/java/com/lind/data/starter/hbase/readme.md) |
+| Doris | [doris/readme.md](src/main/java/com/lind/data/starter/doris/readme.md) |
 
 ## 依赖
 
@@ -45,6 +46,15 @@ Spring Boot 3 Starter：在官方 Spring Data Redis / MongoDB / Elasticsearch �
   <groupId>org.apache.hbase</groupId>
   <artifactId>hbase-client</artifactId>
 </dependency>
+<!-- Doris：MySQL 协议 JDBC + Stream Load -->
+<dependency>
+  <groupId>org.springframework.boot</groupId>
+  <artifactId>spring-boot-starter-jdbc</artifactId>
+</dependency>
+<dependency>
+  <groupId>com.mysql</groupId>
+  <artifactId>mysql-connector-j</artifactId>
+</dependency>
 ```
 
 ## 自动配置
@@ -56,8 +66,9 @@ Spring Boot 3 Starter：在官方 Spring Data Redis / MongoDB / Elasticsearch �
 | `lind.data.mongo.enabled` | `true` | `LindSpringMongo`（需已有 `MongoTemplate`） |
 | `lind.data.elasticsearch.enabled` | `true` | `LindSpringElasticsearch`（需已有 `ElasticsearchOperations`） |
 | `lind.data.hbase.enabled` | `false` | `Connection` + `LindHBaseTemplate` |
+| `lind.data.doris.enabled` | `false` | `DataSource`（可选）+ `JdbcTemplate` + `DorisStreamLoad` + `LindSpringDoris` |
 
-连接信息使用 Spring Boot 官方属性；HBase 使用 `lind.data.hbase.*`，详见 [hbase/readme.md](src/main/java/com/lind/data/starter/hbase/readme.md)。
+连接信息使用 Spring Boot 官方属性；HBase / Doris 使用 `lind.data.hbase.*` / `lind.data.doris.*`，详见对应包文档。
 
 ## 快速用法
 
@@ -89,6 +100,10 @@ es.aggregation().terms("brand.keyword", 10, Product.class);
 
 @Autowired LindHBaseTemplate hbase;
 hbase.putString("t", "rk", "cf", "q", "v");
+
+@Autowired LindSpringDoris doris; // lind.data.doris.enabled=true
+doris.jdbc().queryForList("select 1");
+doris.streamLoad().loadJson("ods_event", "[{\"id\":1}]");
 ```
 
 ## 规范说明

@@ -1,87 +1,65 @@
 # lind-qps-checker
 
-控制台压测工具：在一个测试周期内评估 REST / HTTP 服务的并发处理能力，并输出测试报告。
+HTTP 压测工具：**Web 界面（FreeMarker）**。评估 REST / HTTP 服务的并发与 QPS，任务与用例持久化到 H2。
 
 ## 报告指标
 
-- 测试并发数 / 最大可用并发数（`--find-max`）
+- 测试并发数 / 最大可用并发数（阶梯加压）
 - 总请求数、成功数、失败数、**成功率**
 - **QPS**
 - 最小 / 平均 / **最大** / P95 / P99 响应时间
+- 失败样本：HTTP 状态码 + 响应体
 
-## 运行
+## 启动
 
 ```bash
-# 打包
+mvn -pl lind-qps-checker -am spring-boot:run
+# 或
 mvn -pl lind-qps-checker -am package -DskipTests
-
-# GET + Query 参数
-java -jar lind-qps-checker/target/lind-qps-checker-1.0.0.jar \
-  --url http://localhost:8080/api/list \
-  --param page=1 --param size=20 \
-  --concurrency 50 --duration 30
-
-# POST JSON + 多个 Header
-java -jar lind-qps-checker/target/lind-qps-checker-1.0.0.jar \
-  --url http://localhost:8080/api/login \
-  --method POST \
-  --header "Content-Type:application/json" \
-  --header "Authorization:Bearer token" \
-  --body "{\"username\":\"test\",\"password\":\"123456\"}" \
-  --concurrency 20 --duration 10
-
-# POST 表单 + Query
-java -jar lind-qps-checker/target/lind-qps-checker-1.0.0.jar \
-  --url http://localhost:8080/login \
-  --method POST \
-  --param from=app \
-  --form username=admin --form password=123 \
-  --concurrency 20 --duration 10
-
-# 阶梯加压，探测最大可用并发
-java -jar lind-qps-checker/target/lind-qps-checker-1.0.0.jar \
-  --find-max \
-  --url http://localhost:8080/api/ping \
-  --start 10 --step 10 --max-concurrency 200 \
-  --duration 5 \
-  --min-success-rate 99 \
-  --max-rt-ms 3000
+java -jar lind-qps-checker/target/lind-qps-checker-1.0.0.jar
 ```
 
-## 主要参数
+浏览器打开 [http://localhost:8091](http://localhost:8091)：
 
-| 参数 | 说明 | 默认 |
+| 页面 | 说明 |
+|---|---|
+| `/` | 新建压测；可「保存为用例」 |
+| `/cases` | 左文件夹 / 右用例列表；支持「导入 curl」 |
+| `/cases/new`、`/cases/{id}/edit` | 新建 / 编辑用例 |
+| `/jobs/{id}` | 任务详情（自动轮询报告） |
+| `/jobs` | 历史任务 |
+| `/api/jobs/{id}` | JSON 状态 |
+| `/h2-console` | H2 控制台 |
+
+默认端口：`8091`。库文件：`src/main/resources/h2/qps.*`。
+
+## 表单字段
+
+| 字段 | 说明 | 默认 |
 |---|---|---|
-| `--url` | 目标 URL | 必填 |
-| `--method` | HTTP 方法（GET/POST/PUT/PATCH/DELETE…） | `GET` |
-| `--body` | 原始请求体（JSON 等）；不可与 `--form` 同用 | 空 |
-| `--header` | 请求头，**可重复**；`Name:Value` 或 `Name=Value` | 无 |
-| `--param` / `--query` | Query 参数，**可重复**；`key=value` | 无 |
-| `--form` | 表单参数（`x-www-form-urlencoded`），**可重复** | 无 |
-| `--concurrency` | 固定并发 | `10` |
-| `--duration` | 周期秒数；find-max 时为每阶梯秒数 | `10` / `5` |
-| `--timeout-ms` | 单次请求超时 | `5000` |
-| `--find-max` | 启用最大并发探测 | 关 |
-| `--start` / `--step` / `--max-concurrency` | 阶梯范围 | `10` / `10` / `200` |
-| `--min-success-rate` | SLA 成功率 % | `99` |
-| `--max-rt-ms` | SLA 最大响应时间 ms | `3000` |
-
-说明：
-
-- 多个 Header / 参数可写多次：`--header A:1 --header B:2`
-- 也可一次写多个 Query：`--param a=1&b=2`
-- Header 也可：`--header "A:1;B:2"`
-- 使用 `--form` 时自动设置 `Content-Type: application/x-www-form-urlencoded`
-- 使用 `--body` 且未指定 Content-Type 时，默认 `application/json`
+| URL | 目标地址 | 必填 |
+| method | HTTP 方法 | `GET` |
+| body | 原始请求体；不可与 form 同用 | 空 |
+| headers | 每行 `Name:Value` / `Name=Value` | 无 |
+| query | 每行 `key=value` | 无 |
+| form | 每行 `key=value` | 无 |
+| concurrency | 固定并发 | `10` |
+| duration | 周期秒数；FIND_MAX 时为每阶梯秒数 | `10` |
+| timeoutMs | 单次请求超时 | `5000` |
+| mode | `FIXED` / `FIND_MAX` | `FIXED` |
 
 ## 模块结构
 
-| 类 | 职责 |
-|---|---|
-| `QpsCheckerMain` | 控制台入口 |
-| `CliArgs` | 参数解析 |
-| `LoadConfig` | 压测配置（含 Header / Query / Form / Body） |
-| `HttpRequester` | JDK HttpClient 单次请求 |
-| `LoadRunner` | 固定并发单周期压测 |
-| `CapacityFinder` | 阶梯加压找最大可用并发 |
-| `LoadReport` | 指标汇总与文本报告 |
+```
+com.lind.qps
+├── QpsCheckerApplication     # Spring Boot 入口
+├── engine/                   # 压测引擎（与 Web 无关）
+│   LoadConfig, LoadRunner, CapacityFinder, HttpRequester,
+│   LoadReport, FailureSample, RequestResult
+└── web/
+    ├── WebExceptionHandler
+    ├── catalog/              # 文件夹 / 用例
+    │   CaseCatalogController, CaseCatalogService, CurlImporter, …
+    └── job/                  # 压测任务与表单
+        LoadJobController, LoadJobService, LoadForm, …
+```

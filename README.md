@@ -10,10 +10,10 @@
 |---|---|
 | `lind-algorithm-framework` | 算法与数据结构（树 / FSM / 时间轮 / 限流 / OTP 等，无中间件客户端） |
 | `lind-data-frameless` | 无 Spring：Jedis / Mongo Sync / ES Java API 场景封装 |
-| `lind-data-starter` | Spring Boot Starter：Spring Data Redis/Mongo/ES + HBase 自动配置 |
+| `lind-data-starter` | Spring Boot Starter：Spring Data Redis/Mongo/ES + HBase + Doris 自动配置 |
 | `lind-stream-web` | 流式 Web：`text/event-stream`，类大模型逐段返回 |
 | `lind-delay-task-web` | 延时任务：时间轮 + MySQL 持久化 + 管理页 |
-| `lind-qps-checker` | 控制台压测：单周期评估 REST 并发 / QPS，输出测试报告 |
+| `lind-qps-checker` | HTTP 压测：Web（FreeMarker）+ H2 用例/任务持久化 |
 
 ```bash
 mvn clean test
@@ -23,8 +23,8 @@ mvn -pl lind-stream-web -am spring-boot:run
 mvn -pl lind-delay-task-web -am spring-boot:run
 # 打开 http://localhost:8090/admin/tasks
 
-mvn -pl lind-qps-checker -am package
-java -jar lind-qps-checker/target/lind-qps-checker-1.0.0.jar --url http://localhost:8080/ping --concurrency 50 --duration 30
+mvn -pl lind-qps-checker -am spring-boot:run
+# 浏览器打开 http://localhost:8091
 ```
 
 ## 算法库一览（`lind-algorithm-framework`）
@@ -61,7 +61,7 @@ java -jar lind-qps-checker/target/lind-qps-checker-1.0.0.jar --url http://localh
 
 | 模块 | 说明 |
 |---|---|
-| [`lind-data-starter`](lind-data-starter/README.md) | **Spring Boot 优先**：基于 Spring Data Redis / MongoDB / Elasticsearch + HBase Client |
+| [`lind-data-starter`](lind-data-starter/README.md) | **Spring Boot 优先**：基于 Spring Data Redis / MongoDB / Elasticsearch + HBase Client + Apache Doris |
 | [`lind-data-frameless`](lind-data-frameless/README.md) | 无 Spring：Jedis / Mongo Sync Driver / ES Java API |
 
 ```xml

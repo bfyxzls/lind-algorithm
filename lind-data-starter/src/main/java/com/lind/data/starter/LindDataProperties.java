@@ -18,6 +18,8 @@ public class LindDataProperties {
 
 	private final Hbase hbase = new Hbase();
 
+	private final Doris doris = new Doris();
+
 	public Redis getRedis() {
 		return redis;
 	}
@@ -36,6 +38,10 @@ public class LindDataProperties {
 
 	public Hbase getHbase() {
 		return hbase;
+	}
+
+	public Doris getDoris() {
+		return doris;
 	}
 
 	public static class Redis {
@@ -136,6 +142,130 @@ public class LindDataProperties {
 
 		public void setZookeeperZnodeParent(String zookeeperZnodeParent) {
 			this.zookeeperZnodeParent = zookeeperZnodeParent;
+		}
+
+	}
+
+	/**
+	 * Apache Doris（MySQL 协议查询 + FE HTTP Stream Load）。默认关闭，避免误连。
+	 */
+	public static class Doris {
+
+		private boolean enabled = false;
+
+		/** JDBC 地址，默认连 FE query port 9030。 */
+		private String jdbcUrl = "jdbc:mysql://127.0.0.1:9030/demo";
+
+		private String username = "root";
+
+		private String password = "";
+
+		private String driverClassName = "com.mysql.cj.jdbc.Driver";
+
+		/** FE HTTP 主机（Stream Load）。 */
+		private String feHttpHost = "127.0.0.1";
+
+		/** FE HTTP 端口，默认 8030。 */
+		private int feHttpPort = 8030;
+
+		/** Stream Load 默认库名。 */
+		private String database = "demo";
+
+		/** Stream Load 最大过滤比例。 */
+		private double maxFilterRatio = 0.1;
+
+		/** Stream Load 超时（秒）。 */
+		private int timeoutSeconds = 600;
+
+		/** Stream Load label 前缀。 */
+		private String labelPrefix = "lind";
+
+		public boolean isEnabled() {
+			return enabled;
+		}
+
+		public void setEnabled(boolean enabled) {
+			this.enabled = enabled;
+		}
+
+		public String getJdbcUrl() {
+			return jdbcUrl;
+		}
+
+		public void setJdbcUrl(String jdbcUrl) {
+			this.jdbcUrl = jdbcUrl;
+		}
+
+		public String getUsername() {
+			return username;
+		}
+
+		public void setUsername(String username) {
+			this.username = username;
+		}
+
+		public String getPassword() {
+			return password;
+		}
+
+		public void setPassword(String password) {
+			this.password = password;
+		}
+
+		public String getDriverClassName() {
+			return driverClassName;
+		}
+
+		public void setDriverClassName(String driverClassName) {
+			this.driverClassName = driverClassName;
+		}
+
+		public String getFeHttpHost() {
+			return feHttpHost;
+		}
+
+		public void setFeHttpHost(String feHttpHost) {
+			this.feHttpHost = feHttpHost;
+		}
+
+		public int getFeHttpPort() {
+			return feHttpPort;
+		}
+
+		public void setFeHttpPort(int feHttpPort) {
+			this.feHttpPort = feHttpPort;
+		}
+
+		public String getDatabase() {
+			return database;
+		}
+
+		public void setDatabase(String database) {
+			this.database = database;
+		}
+
+		public double getMaxFilterRatio() {
+			return maxFilterRatio;
+		}
+
+		public void setMaxFilterRatio(double maxFilterRatio) {
+			this.maxFilterRatio = maxFilterRatio;
+		}
+
+		public int getTimeoutSeconds() {
+			return timeoutSeconds;
+		}
+
+		public void setTimeoutSeconds(int timeoutSeconds) {
+			this.timeoutSeconds = timeoutSeconds;
+		}
+
+		public String getLabelPrefix() {
+			return labelPrefix;
+		}
+
+		public void setLabelPrefix(String labelPrefix) {
+			this.labelPrefix = labelPrefix;
 		}
 
 	}

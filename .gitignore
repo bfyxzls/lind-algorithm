@@ -33,3 +33,9 @@ Thumbs.db
 
 # Local H2 delay-task DB（锚定仓库根目录，避免误忽略 **/data/** 源码路径）
 /data/
+
+# lind-qps-checker H2 文件库（schema 在 resources，数据文件不入库）
+lind-qps-checker/src/main/resources/h2/*.db
+lind-qps-checker/src/main/resources/h2/*.mv.db
+lind-qps-checker/src/main/resources/h2/*.trace.db
+lind-qps-checker/src/main/resources/h2/*.lock.db

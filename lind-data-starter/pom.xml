@@ -15,7 +15,7 @@
 
     <name>lind-data-starter</name>
     <description>
-        Spring Boot Starter：基于 Spring Data Redis / MongoDB / Elasticsearch 与 HBase Client 的场景封装与自动配置。
+        Spring Boot Starter：基于 Spring Data Redis / MongoDB / Elasticsearch、HBase Client 与 Apache Doris 的场景封装与自动配置。
     </description>
 
     <dependencies>
@@ -48,6 +48,16 @@
         <dependency>
             <groupId>org.apache.hbase</groupId>
             <artifactId>hbase-client</artifactId>
+        </dependency>
+        <!-- Doris：MySQL 协议 JDBC + Stream Load（JDK HttpClient） -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-jdbc</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
+            <scope>runtime</scope>
         </dependency>
 
         <dependency>

@@ -1,4 +1,4 @@
-package com.lind.qps;
+package com.lind.qps.engine;
 
 import java.io.IOException;
 import java.net.http.HttpClient;
@@ -43,13 +43,14 @@ public final class HttpRequester {
 			else {
 				builder.method(method, HttpRequest.BodyPublishers.noBody());
 			}
-			HttpResponse<Void> response = client.send(builder.build(), HttpResponse.BodyHandlers.discarding());
+			HttpResponse<String> response = client.send(builder.build(), HttpResponse.BodyHandlers.ofString());
 			long latency = System.nanoTime() - start;
 			int status = response.statusCode();
 			if (config.isSuccessStatus(status)) {
 				return RequestResult.ok(status, latency);
 			}
-			return RequestResult.fail(status, latency, "unexpected status " + status);
+			String body = response.body();
+			return RequestResult.fail(status, latency, "unexpected status " + status, body);
 		}
 		catch (IOException | InterruptedException | RuntimeException ex) {
 			if (ex instanceof InterruptedException) {
