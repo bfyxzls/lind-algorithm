@@ -14,6 +14,7 @@
 | `lind-stream-web` | 流式 Web：`text/event-stream`，类大模型逐段返回 |
 | `lind-delay-task-web` | 延时任务：时间轮 + MySQL 持久化 + 管理页 |
 | `lind-qps-checker` | HTTP 压测：Web（FreeMarker）+ H2 用例/任务持久化 |
+| `lind-llm-starter` | AI / 大模型 / 机器学习学习模块（先落地经典 ML） |
 
 ```bash
 mvn clean test
@@ -100,6 +101,17 @@ curl -N http://localhost:8088/v1/chat/completions \
 ```
 
 详见 [lind-stream-web/README.md](lind-stream-web/README.md)。
+
+## AI / 机器学习（`lind-llm-starter`）
+
+学习与研究 AI 大模型、机器学习、训练与超参动态调整。当前已落地经典 ML 包（线性/逻辑回归、K-Means、训练循环），文档见：
+
+- [lind-llm-starter/README.md](lind-llm-starter/README.md)
+- [ml/readme.md](lind-llm-starter/src/main/java/com/lind/llm/ml/readme.md)
+
+```bash
+mvn -pl lind-llm-starter -am test
+```
 
 ## License
 

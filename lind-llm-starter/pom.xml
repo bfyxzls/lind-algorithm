@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.lind</groupId>
+        <artifactId>lind-algorithm</artifactId>
+        <version>1.0.0</version>
+    </parent>
+
+    <artifactId>lind-llm-starter</artifactId>
+    <packaging>jar</packaging>
+
+    <name>lind-llm-starter</name>
+    <description>
+        AI / 大模型 / 机器学习学习与研究模块：经典 ML 算法、训练循环、超参动态调整；后续扩展 LLM 推理与微调场景。
+    </description>
+
+    <dependencies>
+        <!-- 后续接入 Spring Boot 自动配置时使用；当前 ml 包为纯 JDK 教学实现 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-autoconfigure</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-configuration-processor</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+</project>

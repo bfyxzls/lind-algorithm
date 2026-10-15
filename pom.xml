@@ -20,6 +20,7 @@
         <module>lind-stream-web</module>
         <module>lind-delay-task-web</module>
         <module>lind-qps-checker</module>
+        <module>lind-llm-starter</module>
     </modules>
 
     <properties>
@@ -63,6 +64,11 @@
             <dependency>
                 <groupId>com.lind</groupId>
                 <artifactId>lind-data-starter</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.lind</groupId>
+                <artifactId>lind-llm-starter</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
