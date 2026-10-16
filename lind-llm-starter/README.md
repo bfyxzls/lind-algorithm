@@ -2,7 +2,7 @@
 
 面向 **AI 大模型 / 机器学习** 的学习与研究模块：用纯 JDK 演示经典 ML 概念、训练循环与超参动态调整；后续再扩展 LLM 推理、微调与参数服务化。
 
-> 当前阶段重点：`com.lind.llm.ml`（机器学习基础）。LLM 相关包将按路线图逐步加入。
+> 当前阶段重点：`com.lind.llm.ml`（机器学习基础）。LLM 相关包将按路线图逐步加入。SGD:Stochastic Gradient Descent（随机梯度下降）
 
 ## 为什么先做 ML？
 
