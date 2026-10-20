@@ -14,7 +14,7 @@
     <packaging>jar</packaging>
 
     <name>lind-qps-checker</name>
-    <description>HTTP 压测工具：Web 界面（FreeMarker），评估并发 / QPS，用例与结果持久化到 H2</description>
+    <description>HTTP 压测工具：Web 界面（FreeMarker），评估并发 / QPS，用例与结果持久化到 MySQL（Liquibase 管理变更）</description>
 
     <dependencies>
         <dependency>
@@ -35,9 +35,21 @@
             <artifactId>spring-tx</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        <!-- 数据库变更管理：启动时按 changelog 升级 schema -->
+        <dependency>
+            <groupId>org.liquibase</groupId>
+            <artifactId>liquibase-core</artifactId>
+        </dependency>
+
+        <!-- 单测仍用 H2（内存）执行同一套 Liquibase changelog -->
+        <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
-            <scope>runtime</scope>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>

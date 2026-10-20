@@ -6,7 +6,8 @@ import com.lind.llm.ml.model.KMeans;
 import org.junit.jupiter.api.Test;
 
 /**
- * K-Means 聚类入门测试。
+ * K-Means 聚类入门测试
+ * 无监督、k 与迭代、簇编号含义
  *
  * <p>
  * <b>无监督学习</b>：没有「正确答案」标签 y。算法只看点长什么样，把相似的点分到同一组（簇）。

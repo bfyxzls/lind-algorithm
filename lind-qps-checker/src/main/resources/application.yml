@@ -5,22 +5,17 @@ spring:
   application:
     name: lind-qps-checker
   datasource:
-    # H2 文件库放在模块 resources/h2 下（workingDirectory=模块根目录）
-    url: jdbc:h2:file:./src/main/resources/h2/qps;MODE=MySQL;AUTO_SERVER=TRUE;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE
-    driver-class-name: org.h2.Driver
-    username: sa
-    password:
+    url: jdbc:mysql://localhost:3306/lind_qps?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=UTF-8&useSSL=false&allowPublicKeyRetrieval=true
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: root
+    password: 123456
+  # 表结构改由 Liquibase 管理，不再使用 spring.sql.init
   sql:
     init:
-      mode: always
-      schema-locations: classpath:schema-qps.sql
-      continue-on-error: true
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
-      settings:
-        web-allow-others: false
+      mode: never
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.xml
+    enabled: true
   freemarker:
     cache: false
     suffix: .ftl
@@ -32,3 +27,4 @@ spring:
 logging:
   level:
     com.lind.qps: INFO
+    liquibase: INFO

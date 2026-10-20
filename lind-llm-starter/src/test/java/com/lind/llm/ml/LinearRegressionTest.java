@@ -14,7 +14,8 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 
 /**
- * 线性回归入门测试。
+ * 线性回归入门测试
+ * 回归是什么、标准化、学习率/epoch、损失与 R²、预测时为何要同源 scaler、学习率衰减
  *
  * <p>
  * <b>回归</b>要解决的问题：根据输入 x，预测一个<strong>连续数值</strong> y。 例如：用房屋面积预测房价。

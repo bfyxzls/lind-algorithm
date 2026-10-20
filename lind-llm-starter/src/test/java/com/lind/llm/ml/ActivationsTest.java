@@ -7,7 +7,8 @@ import com.lind.llm.ml.math.Activations;
 import org.junit.jupiter.api.Test;
 
 /**
- * 激活函数入门测试。
+ * 激活函数入门测试
+ * Sigmoid / Softmax 在做什么
  *
  * <p>
  * 神经网络 / 逻辑回归里，「激活」就是给线性计算结果加一个非线性变换。 没有非线性，多层网络叠起来仍等价于一层线性，表达能力很弱。

@@ -1,13 +1,17 @@
 spring:
   datasource:
-    url: jdbc:h2:mem:qps_test;MODE=MySQL;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE
+    # 每个 Spring 测试上下文使用独立 H2 库，避免 Liquibase 重复创建 DATABASECHANGELOG
+    generate-unique-name: true
+    url: jdbc:h2:mem:qps_test;MODE=MySQL;DB_CLOSE_DELAY=-1
     driver-class-name: org.h2.Driver
     username: sa
     password:
   sql:
     init:
-      mode: always
-      schema-locations: classpath:schema-qps.sql
+      mode: never
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.xml
+    enabled: true
   h2:
     console:
       enabled: false

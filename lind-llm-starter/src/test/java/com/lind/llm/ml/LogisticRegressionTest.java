@@ -12,7 +12,8 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 
 /**
- * 逻辑回归（二分类）入门测试。
+ * 逻辑回归（二分类）入门测试
+ * 分类 vs 回归、Sigmoid 概率、准确率
  *
  * <p>
  * <b>分类</b>与回归不同：标签不是连续房价，而是<strong>类别</strong>。 二分类最常见：垃圾邮件/正常、通过/不通过，标签用 0 和 1 表示。

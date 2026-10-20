@@ -1,6 +1,6 @@
 # lind-qps-checker
 
-HTTP 压测工具：**Web 界面（FreeMarker）**。评估 REST / HTTP 服务的并发与 QPS，任务与用例持久化到 H2。
+HTTP 压测工具：**Web 界面（FreeMarker）**。评估 REST / HTTP 服务的并发与 QPS，任务与用例持久化到 **MySQL**，表结构由 **Liquibase** 管理。
 
 ## 报告指标
 
@@ -9,6 +9,37 @@ HTTP 压测工具：**Web 界面（FreeMarker）**。评估 REST / HTTP 服务�
 - **QPS**
 - 最小 / 平均 / **最大** / P95 / P99 响应时间
 - 失败样本：HTTP 状态码 + 响应体
+
+## 数据库准备
+
+1. 本地启动 MySQL，创建库（仅需一次）：
+
+```sql
+CREATE DATABASE lind_qps DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+```
+
+2. 按需修改 [`src/main/resources/application.yml`](src/main/resources/application.yml) 中的账号密码（默认 `root` / `123456`）。
+
+3. 应用启动时 Liquibase 会自动执行 changelog，创建 `qps_job` / `qps_folder` / `qps_case` 等表。
+
+> 时间字段使用 `datetime`（避免 MySQL 对多个 `TIMESTAMP NOT NULL` 的默认值限制）。  
+> 若曾启动失败留下半成品表，可清空后重跑：
+>
+> ```sql
+> USE lind_qps;
+> DROP TABLE IF EXISTS qps_case, qps_folder, qps_job, DATABASECHANGELOG, DATABASECHANGELOGLOCK;
+> ```
+
+变更脚本目录：
+
+```
+src/main/resources/db/changelog/
+├── db.changelog-master.xml           # 总入口
+└── changes/
+    └── 001-init-qps-tables.xml       # 初始表结构（XML，可读性更好）
+```
+
+后续改表：在 `changes/` 新增 `002-xxx.xml`，并在 master 中 `<include/>`，**不要改已发布过的 changeset id**。
 
 ## 启动
 
@@ -29,9 +60,8 @@ java -jar lind-qps-checker/target/lind-qps-checker-1.0.0.jar
 | `/jobs/{id}` | 任务详情（自动轮询报告） |
 | `/jobs` | 历史任务 |
 | `/api/jobs/{id}` | JSON 状态 |
-| `/h2-console` | H2 控制台 |
 
-默认端口：`8091`。库文件：`src/main/resources/h2/qps.*`。
+默认端口：`8091`。
 
 ## 表单字段
 
@@ -63,3 +93,7 @@ com.lind.qps
     └── job/                  # 压测任务与表单
         LoadJobController, LoadJobService, LoadForm, …
 ```
+
+## 测试说明
+
+单元 / Web 测试使用 **H2 内存库**（`MODE=MySQL`），并执行同一套 Liquibase changelog，无需本机 MySQL。

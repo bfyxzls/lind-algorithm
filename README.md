@@ -13,7 +13,7 @@
 | `lind-data-starter` | Spring Boot Starter：Spring Data Redis/Mongo/ES + HBase + Doris 自动配置 |
 | `lind-stream-web` | 流式 Web：`text/event-stream`，类大模型逐段返回 |
 | `lind-delay-task-web` | 延时任务：时间轮 + MySQL 持久化 + 管理页 |
-| `lind-qps-checker` | HTTP 压测：Web（FreeMarker）+ H2 用例/任务持久化 |
+| `lind-qps-checker` | HTTP 压测：Web（FreeMarker）+ MySQL / Liquibase |
 | `lind-llm-starter` | AI / 大模型 / 机器学习学习模块（先落地经典 ML） |
 
 ```bash

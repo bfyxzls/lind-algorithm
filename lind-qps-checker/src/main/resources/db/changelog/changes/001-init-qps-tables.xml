@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+            https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!-- 压测任务表 -->
+    <changeSet id="001-qps-job" author="lind">
+        <comment>压测任务表</comment>
+        <createTable tableName="qps_job">
+            <column name="id" type="varchar(32)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="mode" type="varchar(16)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="varchar(16)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="message" type="varchar(2048)"/>
+            <column name="url" type="varchar(2048)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="method" type="varchar(16)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="concurrency" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="duration_seconds" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="timeout_ms" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="headers_json" type="clob"/>
+            <column name="query_params_json" type="clob"/>
+            <column name="form_params_json" type="clob"/>
+            <column name="body" type="clob"/>
+            <column name="start_concurrency" type="int"/>
+            <column name="step" type="int"/>
+            <column name="max_concurrency" type="int"/>
+            <column name="min_success_rate_percent" type="double"/>
+            <column name="max_allowed_latency_ms" type="bigint"/>
+            <column name="created_at" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+            <column name="finished_at" type="datetime"/>
+            <column name="report_json" type="clob"/>
+            <column name="capacity_json" type="clob"/>
+        </createTable>
+        <createIndex tableName="qps_job" indexName="idx_qps_job_created">
+            <column name="created_at" descending="true"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- 测试用例文件夹 -->
+    <changeSet id="001-qps-folder" author="lind">
+        <comment>测试用例文件夹</comment>
+        <createTable tableName="qps_folder">
+            <column name="id" type="varchar(32)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="varchar(128)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="parent_id" type="varchar(32)"/>
+            <column name="created_at" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createIndex tableName="qps_folder" indexName="idx_qps_folder_parent">
+            <column name="parent_id"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- 可复用压测用例 -->
+    <changeSet id="001-qps-case" author="lind">
+        <comment>可复用压测用例</comment>
+        <createTable tableName="qps_case">
+            <column name="id" type="varchar(32)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="folder_id" type="varchar(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="varchar(256)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="varchar(1024)"/>
+            <column name="url" type="varchar(2048)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="method" type="varchar(16)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="mode" type="varchar(16)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="concurrency" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="duration_seconds" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="timeout_ms" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="headers_text" type="clob"/>
+            <column name="query_params_text" type="clob"/>
+            <column name="form_params_text" type="clob"/>
+            <column name="body" type="clob"/>
+            <column name="start_concurrency" type="int"/>
+            <column name="step" type="int"/>
+            <column name="max_concurrency" type="int"/>
+            <column name="min_success_rate_percent" type="double"/>
+            <column name="max_allowed_latency_ms" type="bigint"/>
+            <column name="created_at" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createIndex tableName="qps_case" indexName="idx_qps_case_folder">
+            <column name="folder_id"/>
+        </createIndex>
+        <createIndex tableName="qps_case" indexName="idx_qps_case_updated">
+            <column name="updated_at" descending="true"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>
