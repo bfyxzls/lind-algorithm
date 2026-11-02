@@ -46,12 +46,14 @@ public class ChatController {
 	}
 
 	/**
-	 * 简易演示：GET /api/chat/stream?q=你好
+	 * 简易演示：GET /api/chat/stream?q=你好 ，可选 coalesce=false 关闭攒包对照。
 	 */
 	@GetMapping(value = "/api/chat/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-	public Flux<ServerSentEvent<String>> streamGet(@RequestParam(name = "q", defaultValue = "") String question) {
-		return chatCompletionService.streamTokens(question)
-				.map(token -> ServerSentEvent.builder(token).event("token").build())
+	public Flux<ServerSentEvent<String>> streamGet(@RequestParam(name = "q", defaultValue = "") String question,
+			@RequestParam(name = "coalesce", defaultValue = "true") boolean coalesce) {
+		Flux<String> tokens = coalesce ? chatCompletionService.streamTokens(question)
+				: chatCompletionService.streamTokensRaw(question);
+		return tokens.map(token -> ServerSentEvent.builder(token).event("token").build())
 				.concatWith(Mono.just(ServerSentEvent.builder("[DONE]").event("done").build()));
 	}
 

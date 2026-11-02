@@ -7,6 +7,17 @@ spring:
   codec:
     max-in-memory-size: 2MB
 
+# SSE 攒包（以本文件为准，会覆盖 Java 字段默认值）
+# 模拟生成约每 40ms 一个小 token（约 2 字）。若 max-delay 过短，会在远未达到 flush-chars 时先刷出，
+# 这时改 flush-chars（48→480）几乎看不出差别——图里 ~80ms 一小段就是时间窗在主导。
+lind:
+  stream:
+    coalesce:
+      enabled: true
+      flush-chars: 16
+      # 想靠字符阈值攒大包：max-delay 要大于「攒满所需时间」；否则一直被时间窗截断
+      max-delay: 3s
+
 logging:
   level:
     com.lind.stream: INFO

@@ -75,4 +75,27 @@ class ChatControllerTest {
 		assertThat(String.join("", tokens)).isEqualTo("你好，世界");
 	}
 
+	@Test
+	void coalesceFalseEmitsMoreTokenEventsThanDefault() {
+		webTestClient = webTestClient.mutate().responseTimeout(Duration.ofSeconds(30)).build();
+
+		String coalesced = webTestClient.get()
+				.uri(uriBuilder -> uriBuilder.path("/api/chat/stream").queryParam("q", "对比攒包")
+						.queryParam("coalesce", "true").build())
+				.accept(MediaType.TEXT_EVENT_STREAM).exchange().expectStatus().isOk().expectBody(String.class)
+				.returnResult().getResponseBody();
+
+		String raw = webTestClient.get()
+				.uri(uriBuilder -> uriBuilder.path("/api/chat/stream").queryParam("q", "对比攒包")
+						.queryParam("coalesce", "false").build())
+				.accept(MediaType.TEXT_EVENT_STREAM).exchange().expectStatus().isOk().expectBody(String.class)
+				.returnResult().getResponseBody();
+
+		assertThat(coalesced).contains("[DONE]");
+		assertThat(raw).contains("[DONE]");
+		long coalescedEvents = coalesced.lines().filter(l -> l.startsWith("data:") && !l.contains("[DONE]")).count();
+		long rawEvents = raw.lines().filter(l -> l.startsWith("data:") && !l.contains("[DONE]")).count();
+		assertThat(rawEvents).isGreaterThan(coalescedEvents);
+	}
+
 }

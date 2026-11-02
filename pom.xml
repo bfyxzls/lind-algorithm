@@ -21,6 +21,8 @@
         <module>lind-delay-task-web</module>
         <module>lind-qps-checker</module>
         <module>lind-llm-starter</module>
+        <module>lind-depth-research</module>
+        <module>lind-architecture</module>
     </modules>
 
     <properties>
@@ -69,6 +71,16 @@
             <dependency>
                 <groupId>com.lind</groupId>
                 <artifactId>lind-llm-starter</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.lind</groupId>
+                <artifactId>lind-depth-research</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.lind</groupId>
+                <artifactId>lind-architecture</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

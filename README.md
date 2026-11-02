@@ -15,6 +15,8 @@
 | `lind-delay-task-web` | 延时任务：时间轮 + MySQL 持久化 + 管理页 |
 | `lind-qps-checker` | HTTP 压测：Web（FreeMarker）+ MySQL / Liquibase |
 | `lind-llm-starter` | AI / 大模型 / 机器学习学习模块（先落地经典 ML） |
+| `lind-depth-research` | 工程级后端深度研究（对照 `docs/工程化分析.md`） |
+| `lind-architecture` | 架构模式落地：对照 `docs/elasticsearch-java的学习.md` §3（ToyDoc SDK） |
 
 ```bash
 mvn clean test
@@ -111,6 +113,18 @@ curl -N http://localhost:8088/v1/chat/completions \
 
 ```bash
 mvn -pl lind-llm-starter -am test
+```
+
+## 工程深度研究（`lind-depth-research`）
+
+对照 [`docs/工程化分析.md`](docs/工程化分析.md)。三个场景均已落地：
+
+1. DirectBuffer 攒包流式写出  
+2. mmap + IVF/PQ 量化检索  
+3. WAL + Last-Event-ID 断点续传  
+
+```bash
+mvn -pl lind-depth-research -am test
 ```
 
 ## License

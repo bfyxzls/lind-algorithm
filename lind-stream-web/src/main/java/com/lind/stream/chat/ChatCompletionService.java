@@ -1,20 +1,34 @@
 package com.lind.stream.chat;
 
+import com.lind.stream.buffer.CoalescingStringFlux;
+import com.lind.stream.buffer.SseCoalesceProperties;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 
 /**
- * 模拟大模型逐 token 生成：按字符/词片断延迟推送，便于演示 SSE。
+ * 模拟大模型逐 token 生成，再按策略攒包后推送，减少 SSE 小事件风暴。
  */
 @Service
 public class ChatCompletionService {
 
+	private static final Logger log = LoggerFactory.getLogger(ChatCompletionService.class);
+
+	/** 模拟上游吐 token 的间隔；与 coalesce.max-delay 一起决定「时间窗会不会先于字符阈值触发」。 */
 	private static final Duration TOKEN_INTERVAL = Duration.ofMillis(40);
+
+	private final SseCoalesceProperties coalesceProperties;
+
+	public ChatCompletionService(SseCoalesceProperties coalesceProperties) {
+		this.coalesceProperties = coalesceProperties;
+		log.info("SSE coalesce effective config: {} (tokenInterval={})", coalesceProperties, TOKEN_INTERVAL);
+	}
 
 	public String generateReply(String userContent) {
 		String prompt = userContent == null ? "" : userContent.trim();
@@ -31,10 +45,20 @@ public class ChatCompletionService {
 				""".formatted(prompt).strip();
 	}
 
+	/**
+	 * 原始细粒度 token（含模拟生成延迟），再经 {@link CoalescingStringFlux} 攒包。
+	 */
 	public Flux<String> streamTokens(String userContent) {
 		String full = generateReply(userContent);
 		List<String> tokens = tokenize(full);
-		return Flux.fromIterable(tokens).delayElements(TOKEN_INTERVAL);
+		Flux<String> raw = Flux.fromIterable(tokens).delayElements(TOKEN_INTERVAL);
+		return CoalescingStringFlux.coalesce(raw, coalesceProperties);
+	}
+
+	/** 不攒包：对照旧行为 / 压测用。 */
+	public Flux<String> streamTokensRaw(String userContent) {
+		String full = generateReply(userContent);
+		return Flux.fromIterable(tokenize(full)).delayElements(TOKEN_INTERVAL);
 	}
 
 	public Flux<ChatCompletionChunk> streamChat(ChatCompletionRequest request) {
