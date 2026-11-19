@@ -22,4 +22,4 @@
 `TokenSource` → `FlushPolicy` → `ByteSink` → `CoalescingStreamWriter` / `PerTokenStreamWriter` → 测试。
 
 心智模型（Heap vs Direct、flip/clear、transferTo、为何要攒包）见
-[`lind-architecture` 的 `nio/readme.md`](../../../../../lind-architecture/src/main/java/com/lind/architecture/nio/readme.md)。
+[`lind-java-foundation` 的 `nio/readme.md`](../../../../../lind-java-foundation/src/main/java/com/lind/foundation/nio/readme.md)。

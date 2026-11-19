@@ -23,6 +23,7 @@
         <module>lind-llm-starter</module>
         <module>lind-depth-research</module>
         <module>lind-architecture</module>
+        <module>lind-java-foundation</module>
     </modules>
 
     <properties>
@@ -81,6 +82,11 @@
             <dependency>
                 <groupId>com.lind</groupId>
                 <artifactId>lind-architecture</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.lind</groupId>
+                <artifactId>lind-java-foundation</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

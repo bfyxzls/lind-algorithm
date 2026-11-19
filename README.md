@@ -17,6 +17,7 @@
 | `lind-llm-starter` | AI / 大模型 / 机器学习学习模块（先落地经典 ML） |
 | `lind-depth-research` | 工程级后端深度研究（对照 `docs/工程化分析.md`） |
 | `lind-architecture` | 架构模式落地：对照 `docs/elasticsearch-java的学习.md` §3（ToyDoc SDK） |
+| `lind-java-foundation` | Java 底座：IO / NIO / 锁（[统一学习入口](lind-java-foundation/README.md)） |
 
 ```bash
 mvn clean test

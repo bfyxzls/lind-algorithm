@@ -1,6 +1,8 @@
 # lind-architecture
 
-对照 [`docs/elasticsearch-java的学习.md`](../docs/elasticsearch-java的学习.md) **§3 最值得学的几个「架构级」知识点**，用一个迷你 **ToyDoc SDK** 把模式落地（不依赖 Elasticsearch）。
+对照 [`docs/elasticsearch-java的学习.md`](../docs/elasticsearch-java的学习.md) **§3 最值得学的几个「架构级」知识点**，用迷你 **ToyDoc SDK** 落地（不依赖 Elasticsearch）。
+
+**底座（IO / NIO / 锁）已拆到独立模块：** 请从 [`lind-java-foundation/README.md`](../lind-java-foundation/README.md) 统一进入学习。
 
 | # | 知识点 | 包 / 类 | 状态 |
 |---|---|---|---|
@@ -38,18 +40,3 @@ InMemoryTransport（教学）/ 真实 HTTP（可自行扩展）
 - **可对照**：每个知识点有独立包与测试断言  
 - **薄而全**：不追求功能完备，追求「模式可迁到自研中间件 Client」  
 - **纯教学依赖**：仅 Jackson（默认 Mapper）+ JUnit
-
-## 补充：IO / NIO 心智模型
-
-| 主题 | 文档 | 测试 |
-|---|---|---|
-| 流概念总览（为何难懂 / 四大家族） | [`io/mental-model.md`](src/main/java/com/lind/architecture/io/mental-model.md) | `StreamFamiliesDemoTest` |
-| `java.io.Writer`（字符出口） | [`io/readme.md`](src/main/java/com/lind/architecture/io/readme.md) | `WriterDemoTest` |
-| 物理文件 BufferedReader/Writer | [`io/buffered-file.md`](src/main/java/com/lind/architecture/io/buffered-file.md) | `BufferedFileCopyDemoTest` |
-| 零拷贝 / `DirectBuffer` | [`nio/readme.md`](src/main/java/com/lind/architecture/nio/readme.md) | `DirectBufferDemoTest` |
-
-流式攒包完整工程版见 [`lind-depth-research`](../lind-depth-research/README.md) 的 `CoalescingStreamWriter`。
-
-```bash
-mvn -pl lind-architecture -Dtest=StreamFamiliesDemoTest,WriterDemoTest,BufferedFileCopyDemoTest,DirectBufferDemoTest test
-```
